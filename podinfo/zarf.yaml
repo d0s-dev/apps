@@ -1,0 +1,80 @@
+kind: ZarfPackageConfig
+metadata:
+  name: podinfo
+  description: Deploy podinfo
+  version: 6.4.0
+components:
+  - name: app
+    description: Podinfo app
+    required: true
+    images:
+      - ghcr.io/stefanprodan/podinfo:6.4.0
+  - name: helm
+    description: Podinfo helm chart
+    required: true
+    charts:
+      - name: podinfo
+        namespace: podinfo
+        url: https://stefanprodan.github.io/podinfo
+        version: 6.4.0
+        releaseName: podinfo
+
+  # Podinfo via flux git source
+  - name: flux
+    description: Example deployment via flux (git) using the famous podinfo example
+    required: false
+    manifests:
+      - name: podinfo
+        namespace: podinfo-git
+        files:
+          - git/podinfo-source.yaml
+          - git/podinfo-kustomization.yaml
+    repos:
+      - https://github.com/stefanprodan/podinfo.git
+    images:
+      - ghcr.io/stefanprodan/podinfo:6.4.0
+
+  # Podinfo via flux helm chart
+  - name: flux-helm
+    description: Example deployment via flux (helm oci) using the famous podinfo example
+    required: false
+    manifests:
+      - name: podinfo
+        namespace: podinfo-helm
+        files:
+          - helm/podinfo-source.yaml
+          - helm/podinfo-helmrelease.yaml
+    images:
+      - ghcr.io/stefanprodan/podinfo:6.4.0
+      # Note: this is a helm OCI artifact rather than a container image
+      - ghcr.io/stefanprodan/charts/podinfo:6.4.0
+
+  # Podinfo via flux helm oci
+  - name: flux-helm-oci
+    description: Example deployment via flux (helm oci repo) using the famous podinfo example
+    required: false
+    manifests:
+      - name: podinfo
+        namespace: podinfo-helm-oci
+        files:
+          - helm-oci/podinfo-source.yaml
+          - helm-oci/podinfo-helmrelease.yaml
+    images:
+      - ghcr.io/stefanprodan/podinfo:6.4.0
+      # Note: this is a helm OCI artifact rather than a container image
+      - ghcr.io/stefanprodan/charts/podinfo:6.4.0
+
+  # Podinfo via flux oci
+  - name: flux-oci
+    description: Example deployment via flux (native oci) using the famous podinfo example
+    required: false
+    manifests:
+      - name: podinfo
+        namespace: podinfo-oci
+        files:
+          - oci/podinfo-source.yaml
+          - oci/podinfo-kustomization.yaml
+    images:
+      - ghcr.io/stefanprodan/podinfo:6.4.0
+      # Note: this is a flux kustomize OCI artifact rather than a container image
+      - ghcr.io/stefanprodan/manifests/podinfo:6.4.0

@@ -1,0 +1,56 @@
+kind: ZarfPackageConfig
+metadata:
+  name: keycloak
+  description: Deploy Keycloak with CloudNativePG operator
+  version: 23.0.0
+  
+components:
+  # CloudNativePG Operator for PostgreSQL
+  - name: cloudnative-pg-operator
+    description: CloudNativePG operator for managing PostgreSQL clusters
+    required: true
+    charts:
+      - name: cloudnative-pg
+        namespace: cnpg-system
+        url: https://cloudnative-pg.github.io/charts
+        version: 0.21.2
+        releaseName: cloudnative-pg
+    images:
+      - ghcr.io/cloudnative-pg/cloudnative-pg:1.23.1
+      
+  # PostgreSQL Database using CloudNativePG
+  - name: postgres
+    description: PostgreSQL database cluster for Keycloak
+    required: true
+    manifests:
+      - name: postgres-cluster
+        namespace: keycloak
+        files:
+          - manifests/postgres-cluster.yaml
+    images:
+      - ghcr.io/cloudnative-pg/postgresql:16.2
+      
+  # Keycloak Operator
+  - name: keycloak-operator
+    description: Keycloak operator for managing Keycloak instances
+    required: true
+    manifests:
+      - name: keycloak-operator
+        namespace: keycloak
+        files:
+          - manifests/keycloak-operator-crds.yaml
+          - manifests/keycloak-operator.yaml
+    images:
+      - quay.io/keycloak/keycloak-operator:26.4.1
+      
+  # Keycloak Instance
+  - name: keycloak
+    description: Keycloak instance
+    required: true
+    manifests:
+      - name: keycloak-instance
+        namespace: keycloak
+        files:
+          - manifests/keycloak-instance.yaml
+    images:
+      - quay.io/keycloak/keycloak:26.4.1
