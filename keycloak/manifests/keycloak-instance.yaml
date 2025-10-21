@@ -20,8 +20,9 @@ spec:
       key: password
   
   hostname:
-    hostname: keycloak.local
+    hostname: keycloak.local  # Change this to your desired domain (e.g., auth.example.com, sso.local, etc.)
     strict: false
+    backchannelDynamic: true
   
   http:
     httpEnabled: true
