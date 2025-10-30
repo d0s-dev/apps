@@ -1,0 +1,93 @@
+{
+  "id": "keycloak",
+  "name": "Keycloak",
+  "summary": "Open source identity and access management",
+  "description": "Keycloak is an open source Identity and Access Management solution aimed at modern applications and services. It makes it easy to secure applications and services with little to no code.",
+  "upstream": {
+    "helm": {
+      "name": "keycloak",
+      "repo": "https://charts.bitnami.com/bitnami",
+      "documentation": "https://github.com/bitnami/charts/tree/main/bitnami/keycloak"
+    },
+    "git": "https://github.com/keycloak/keycloak",
+    "website": "https://www.keycloak.org/"
+  },
+  "labels": [
+    "auth",
+    "security",
+    "identity"
+  ],
+  "providers": {
+    "vendor": {
+      "support": "community",
+      "notes": "Official Keycloak image",
+      "versions": [
+        {
+          "version": "23.0.0",
+          "released": "2023-12-07T00:00:00Z",
+          "zarfPackage": {
+            "registry": "oci://ghcr.io/d0s-dev/keycloak",
+            "tag": "23.0.0"
+          },
+          "aggregates": {
+            "critical": 0,
+            "high": 0,
+            "medium": 0,
+            "low": 0
+          },
+          "images": [
+            {
+              "name": "keycloak/keycloak:23.0.0",
+              "digest": "sha256:d46114859bedcd0966504c1a1ad4b356b066bdf3d1e9a3f6c35b6dc82813dcb8",
+              "size": "428.1 MB",
+              "role": "runtime",
+              "platforms": [
+                "linux/amd64",
+                "linux/arm64"
+              ],
+              "baseImage": "registry.access.redhat.com/ubi8/openjdk-17",
+              "sbom": "./sboms/vendor/23.0.0/keycloak.syft.json",
+              "cves": "./scans/vendor/23.0.0/keycloak.grype.json"
+            }
+          ]
+        }
+      ]
+    },
+    "chainguard": {
+      "support": "enterprise",
+      "notes": "Distroless image from Chainguard with minimal attack surface",
+      "versions": [
+        {
+          "version": "23.0.0",
+          "released": "2023-12-10T00:00:00Z",
+          "zarfPackage": {
+            "registry": "oci://ghcr.io/d0s-dev/keycloak-chainguard",
+            "tag": "23.0.0"
+          },
+          "aggregates": {
+            "critical": 0,
+            "high": 0,
+            "medium": 0,
+            "low": 0
+          },
+          "images": [
+            {
+              "name": "cgr.dev/chainguard/keycloak:latest",
+              "digest": "sha256:ae76d6ea5fb598b469676678d4a4589777a803fa596aee0c1d4230a8e1b8e94c",
+              "size": "312.7 MB",
+              "role": "runtime",
+              "platforms": [
+                "linux/amd64",
+                "linux/arm64"
+              ],
+              "baseImage": "cgr.dev/chainguard/wolfi-base",
+              "sbom": "./sboms/chainguard/23.0.0/keycloak.syft.json",
+              "cves": "./scans/chainguard/23.0.0/keycloak.grype.json"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "lastScanned": "2025-10-30T03:31:33.354Z"
+}

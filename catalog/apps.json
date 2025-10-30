@@ -1,0 +1,192 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2025-10-30T03:31:33.360Z",
+  "apps": [
+    {
+      "id": "grafana",
+      "name": "Grafana",
+      "summary": "Analytics and monitoring platform",
+      "labels": [
+        "monitoring",
+        "observability",
+        "visualization"
+      ],
+      "providers": [
+        "vendor",
+        "ironbank"
+      ],
+      "hasIronBank": true,
+      "hasChainguard": false,
+      "imageCount": 3,
+      "cves": {
+        "critical": 0,
+        "high": 0,
+        "medium": 0,
+        "low": 0
+      },
+      "latestVersion": "10.2.0",
+      "zarfPackage": "catalog/grafana/zarf/zarf.yaml",
+      "links": {
+        "helm": "https://grafana.github.io/helm-charts",
+        "documentation": "https://github.com/grafana/helm-charts/tree/main/charts/grafana",
+        "git": "https://github.com/grafana/grafana",
+        "website": "https://grafana.com/"
+      }
+    },
+    {
+      "id": "vault",
+      "name": "HashiCorp Vault",
+      "summary": "Secure secrets management and encryption",
+      "labels": [
+        "security",
+        "secrets",
+        "encryption"
+      ],
+      "providers": [
+        "vendor",
+        "ironbank"
+      ],
+      "hasIronBank": true,
+      "hasChainguard": false,
+      "imageCount": 2,
+      "cves": {
+        "critical": 0,
+        "high": 0,
+        "medium": 0,
+        "low": 0
+      },
+      "latestVersion": "1.15.0",
+      "zarfPackage": "catalog/vault/zarf/zarf.yaml",
+      "links": {
+        "helm": "https://helm.releases.hashicorp.com",
+        "documentation": "https://developer.hashicorp.com/vault/docs/platform/k8s/helm",
+        "git": "https://github.com/hashicorp/vault",
+        "website": "https://www.vaultproject.io/"
+      }
+    },
+    {
+      "id": "keycloak",
+      "name": "Keycloak",
+      "summary": "Open source identity and access management",
+      "labels": [
+        "auth",
+        "security",
+        "identity"
+      ],
+      "providers": [
+        "vendor",
+        "chainguard"
+      ],
+      "hasIronBank": false,
+      "hasChainguard": true,
+      "imageCount": 2,
+      "cves": {
+        "critical": 0,
+        "high": 0,
+        "medium": 0,
+        "low": 0
+      },
+      "latestVersion": "23.0.0",
+      "zarfPackage": "catalog/keycloak/zarf/zarf.yaml",
+      "links": {
+        "helm": "https://charts.bitnami.com/bitnami",
+        "documentation": "https://github.com/bitnami/charts/tree/main/bitnami/keycloak",
+        "git": "https://github.com/keycloak/keycloak",
+        "website": "https://www.keycloak.org/"
+      }
+    },
+    {
+      "id": "nginx",
+      "name": "Nginx",
+      "summary": "High-performance web server and reverse proxy",
+      "labels": [
+        "web",
+        "proxy",
+        "networking"
+      ],
+      "providers": [
+        "vendor",
+        "chainguard"
+      ],
+      "hasIronBank": false,
+      "hasChainguard": true,
+      "imageCount": 2,
+      "cves": {
+        "critical": 0,
+        "high": 1,
+        "medium": 0,
+        "low": 0
+      },
+      "latestVersion": "1.25.0",
+      "zarfPackage": "catalog/nginx/zarf/zarf.yaml",
+      "links": {
+        "helm": "https://kubernetes.github.io/ingress-nginx",
+        "documentation": "https://kubernetes.github.io/ingress-nginx/",
+        "git": "https://github.com/kubernetes/ingress-nginx",
+        "website": "https://nginx.org/"
+      }
+    },
+    {
+      "id": "postgresql",
+      "name": "PostgreSQL",
+      "summary": "Advanced open-source relational database",
+      "labels": [
+        "database",
+        "sql",
+        "storage"
+      ],
+      "providers": [
+        "vendor",
+        "ironbank"
+      ],
+      "hasIronBank": true,
+      "hasChainguard": false,
+      "imageCount": 2,
+      "cves": {
+        "critical": 0,
+        "high": 0,
+        "medium": 0,
+        "low": 0
+      },
+      "latestVersion": "15.3",
+      "zarfPackage": "catalog/postgresql/zarf/zarf.yaml",
+      "links": {
+        "helm": "https://charts.bitnami.com/bitnami",
+        "documentation": "https://github.com/bitnami/charts/tree/main/bitnami/postgresql",
+        "git": "https://github.com/postgres/postgres",
+        "website": "https://www.postgresql.org/"
+      }
+    },
+    {
+      "id": "redis",
+      "name": "Redis",
+      "summary": "In-memory data structure store",
+      "labels": [
+        "database",
+        "cache",
+        "nosql"
+      ],
+      "providers": [
+        "vendor",
+        "chainguard"
+      ],
+      "hasIronBank": false,
+      "hasChainguard": true,
+      "imageCount": 2,
+      "cves": {
+        "critical": 0,
+        "high": 0,
+        "medium": 0,
+        "low": 0
+      },
+      "latestVersion": "7.2.0",
+      "zarfPackage": "catalog/redis/zarf/zarf.yaml",
+      "links": {
+        "helm": "https://charts.bitnami.com/bitnami",
+        "documentation": "https://github.com/bitnami/charts/tree/main/bitnami/redis",
+        "git": "https://github.com/redis/redis",
+        "website": "https://redis.io/"
+      }
+    }
+  ]
+}

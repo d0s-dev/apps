@@ -1,0 +1,42 @@
+kind: ZarfPackageConfig
+metadata:
+  name: grafana
+  description: "Analytics and monitoring platform"
+  version: "10.2.0"
+  url: "https://grafana.com/"
+  image: "grafana.png"
+  authors:
+    - "d0s-dev"
+
+variables:
+  - name: GRAFANA_ADMIN_PASSWORD
+    description: "Grafana admin password"
+    default: "admin"
+  - name: GRAFANA_HOSTNAME
+    description: "Grafana hostname"
+    default: "grafana.localhost"
+
+components:
+  - name: grafana-server
+    required: true
+    description: "Deploy Grafana server"
+    charts:
+      - name: grafana
+        version: "7.0.8"
+        namespace: grafana
+        url: https://grafana.github.io/helm-charts
+        valuesFiles:
+          - "grafana-values.yaml"
+    images:
+      - "grafana/grafana:10.2.0@sha256:def123456789012345678901234567890abcdef123456789012345678901234567890"
+    manifests:
+      - name: grafana-dashboards
+        files:
+          - "manifests/default-dashboards.yaml"
+    dataInjections:
+      - source: "dashboards"
+        target:
+          namespace: grafana
+          selector: app.kubernetes.io/name=grafana
+          container: grafana
+          path: /var/lib/grafana/dashboards

@@ -1,0 +1,38 @@
+kind: ZarfPackageConfig
+metadata:
+  name: vault
+  description: "Secure secrets management and encryption"
+  version: "1.15.0"
+  url: "https://www.vaultproject.io/"
+  image: "vault.png"
+  authors:
+    - "d0s-dev"
+
+variables:
+  - name: VAULT_ADDR
+    description: "Vault server address"
+    default: "https://vault.localhost"
+  - name: VAULT_STORAGE_SIZE
+    description: "Vault storage size"
+    default: "10Gi"
+
+components:
+  - name: vault-server
+    required: true
+    description: "Deploy HashiCorp Vault server"
+    charts:
+      - name: vault
+        version: "0.25.0"
+        namespace: vault
+        url: https://helm.releases.hashicorp.com
+        valuesFiles:
+          - "vault-values.yaml"
+    images:
+      - "hashicorp/vault:1.15.0@sha256:mno345pqr678901234567890abcdef123456789012345678901234567890abcdef"
+    manifests:
+      - name: vault-init-job
+        files:
+          - "manifests/vault-init.yaml"
+      - name: vault-unseal-cronjob
+        files:
+          - "manifests/vault-unseal.yaml"

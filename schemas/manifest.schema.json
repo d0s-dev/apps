@@ -1,0 +1,117 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "App Manifest Schema",
+  "type": "object",
+  "required": ["id", "name", "summary", "description", "upstream", "labels", "providers", "lastScanned"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$",
+      "description": "Unique identifier for the app"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Display name of the app"
+    },
+    "summary": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "Brief description for catalog cards"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 50,
+      "description": "Detailed description of the app"
+    },
+    "upstream": {
+      "type": "object",
+      "properties": {
+        "helm": {
+          "type": "object",
+          "properties": {
+            "name": {"type": "string"},
+            "repo": {"type": "string", "format": "uri"},
+            "documentation": {"type": "string", "format": "uri"}
+          }
+        },
+        "git": {"type": "string", "format": "uri"},
+        "website": {"type": "string", "format": "uri"}
+      }
+    },
+    "labels": {
+      "type": "array",
+      "items": {"type": "string"},
+      "uniqueItems": true,
+      "description": "Categories and tags for filtering"
+    },
+    "providers": {
+      "type": "object",
+      "patternProperties": {
+        "^[a-z0-9-]+$": {
+          "type": "object",
+          "required": ["versions"],
+          "properties": {
+            "support": {
+              "type": "string",
+              "enum": ["community", "enterprise", "commercial"]
+            },
+            "notes": {"type": "string"},
+            "versions": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["version", "images"],
+                "properties": {
+                  "version": {"type": "string"},
+                  "released": {"type": "string", "format": "date-time"},
+                  "zarfPackage": {
+                    "type": "object",
+                    "properties": {
+                      "registry": {"type": "string"},
+                      "tag": {"type": "string"}
+                    }
+                  },
+                  "aggregates": {
+                    "type": "object",
+                    "properties": {
+                      "critical": {"type": "integer", "minimum": 0},
+                      "high": {"type": "integer", "minimum": 0},
+                      "medium": {"type": "integer", "minimum": 0},
+                      "low": {"type": "integer", "minimum": 0}
+                    }
+                  },
+                  "images": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": ["name", "digest", "size", "role", "sbom", "cves"],
+                      "properties": {
+                        "name": {"type": "string"},
+                        "digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+                        "size": {"type": "string"},
+                        "role": {"type": "string", "enum": ["runtime", "sidecar", "init"]},
+                        "platforms": {
+                          "type": "array",
+                          "items": {"type": "string"}
+                        },
+                        "baseImage": {"type": "string"},
+                        "sbom": {"type": "string"},
+                        "cves": {"type": "string"}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "lastScanned": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp of last security scan"
+    }
+  }
+}

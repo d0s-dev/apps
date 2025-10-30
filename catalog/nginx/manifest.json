@@ -1,0 +1,93 @@
+{
+  "id": "nginx",
+  "name": "Nginx",
+  "summary": "High-performance web server and reverse proxy",
+  "description": "Nginx is a web server that can also be used as a reverse proxy, load balancer, mail proxy and HTTP cache. The software was created by Igor Sysoev and publicly released in 2004. Nginx is free and open-source software, released under the terms of the 2-clause BSD license.",
+  "upstream": {
+    "helm": {
+      "name": "ingress-nginx",
+      "repo": "https://kubernetes.github.io/ingress-nginx",
+      "documentation": "https://kubernetes.github.io/ingress-nginx/"
+    },
+    "git": "https://github.com/kubernetes/ingress-nginx",
+    "website": "https://nginx.org/"
+  },
+  "labels": [
+    "web",
+    "proxy",
+    "networking"
+  ],
+  "providers": {
+    "vendor": {
+      "support": "community",
+      "notes": "Official upstream image",
+      "versions": [
+        {
+          "version": "1.25.0",
+          "released": "2024-05-28T00:00:00Z",
+          "zarfPackage": {
+            "registry": "oci://ghcr.io/d0s-dev/nginx",
+            "tag": "1.25.0"
+          },
+          "aggregates": {
+            "critical": 0,
+            "high": 1,
+            "medium": 0,
+            "low": 0
+          },
+          "images": [
+            {
+              "name": "nginx:1.25.0-alpine",
+              "digest": "sha256:372564549713b433a870c8afeae8927e98e64aa6508ba5c816d6a24e4f80c657",
+              "size": "23.4 MB",
+              "role": "runtime",
+              "platforms": [
+                "linux/amd64",
+                "linux/arm64"
+              ],
+              "baseImage": "alpine:3.18",
+              "sbom": "./sboms/vendor/1.25.0/nginx-alpine.syft.json",
+              "cves": "./scans/vendor/1.25.0/nginx-alpine.grype.json"
+            }
+          ]
+        }
+      ]
+    },
+    "chainguard": {
+      "support": "enterprise",
+      "notes": "Distroless image from Chainguard with minimal attack surface",
+      "versions": [
+        {
+          "version": "1.25.0",
+          "released": "2024-05-30T00:00:00Z",
+          "zarfPackage": {
+            "registry": "oci://ghcr.io/d0s-dev/nginx-chainguard",
+            "tag": "1.25.0"
+          },
+          "aggregates": {
+            "critical": 0,
+            "high": 0,
+            "medium": 0,
+            "low": 0
+          },
+          "images": [
+            {
+              "name": "cgr.dev/chainguard/nginx:latest",
+              "digest": "sha256:db2fdb6ae1e74c7c729fa512b733156a8f16419016c7ed0d53be148e0ae2a718",
+              "size": "18.2 MB",
+              "role": "runtime",
+              "platforms": [
+                "linux/amd64",
+                "linux/arm64"
+              ],
+              "baseImage": "cgr.dev/chainguard/wolfi-base",
+              "sbom": "./sboms/chainguard/1.25.0/nginx.syft.json",
+              "cves": "./scans/chainguard/1.25.0/nginx.grype.json"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "lastScanned": "2025-10-30T03:31:33.355Z"
+}

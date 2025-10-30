@@ -1,0 +1,38 @@
+kind: ZarfPackageConfig
+metadata:
+  name: postgresql
+  description: "Advanced open-source relational database"
+  version: "15.3"
+  url: "https://www.postgresql.org/"
+  image: "postgresql.png"
+  authors:
+    - "d0s-dev"
+
+variables:
+  - name: POSTGRES_DB
+    description: "PostgreSQL database name"
+    default: "postgres"
+  - name: POSTGRES_USER
+    description: "PostgreSQL username"
+    default: "postgres"
+
+components:
+  - name: postgresql-database
+    required: true
+    description: "Deploy PostgreSQL database"
+    charts:
+      - name: postgresql
+        version: "13.1.5"
+        namespace: postgresql
+        url: https://charts.bitnami.com/bitnami
+        valuesFiles:
+          - "postgresql-values.yaml"
+    images:
+      - "docker.io/bitnami/postgresql:15.4.0-debian-11-r45@sha256:ghi789jkl012345678901234567890abcdef123456789012345678901234567890"
+    dataInjections:
+      - source: "config/init-scripts"
+        target:
+          namespace: postgresql
+          selector: app.kubernetes.io/name=postgresql
+          container: postgresql
+          path: /docker-entrypoint-initdb.d

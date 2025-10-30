@@ -1,0 +1,92 @@
+{
+  "id": "postgresql",
+  "name": "PostgreSQL",
+  "summary": "Advanced open-source relational database",
+  "description": "PostgreSQL is a powerful, open source object-relational database system with over 35 years of active development that has earned it a strong reputation for reliability, feature robustness, and performance.",
+  "upstream": {
+    "helm": {
+      "name": "postgresql",
+      "repo": "https://charts.bitnami.com/bitnami",
+      "documentation": "https://github.com/bitnami/charts/tree/main/bitnami/postgresql"
+    },
+    "git": "https://github.com/postgres/postgres",
+    "website": "https://www.postgresql.org/"
+  },
+  "labels": [
+    "database",
+    "sql",
+    "storage"
+  ],
+  "providers": {
+    "vendor": {
+      "support": "community",
+      "notes": "Official PostgreSQL image",
+      "versions": [
+        {
+          "version": "15.3",
+          "released": "2023-05-11T00:00:00Z",
+          "zarfPackage": {
+            "registry": "oci://ghcr.io/d0s-dev/postgresql",
+            "tag": "15.3"
+          },
+          "aggregates": {
+            "critical": 0,
+            "high": 0,
+            "medium": 0,
+            "low": 0
+          },
+          "images": [
+            {
+              "name": "postgres:15.3-alpine",
+              "digest": "sha256:29dcd6cdda5da2cac046cd573fcf66f750db47c2f7572742f01930e1f9613c94",
+              "size": "87.2 MB",
+              "role": "runtime",
+              "platforms": [
+                "linux/amd64",
+                "linux/arm64"
+              ],
+              "baseImage": "alpine:3.18",
+              "sbom": "./sboms/vendor/15.3/postgres-alpine.syft.json",
+              "cves": "./scans/vendor/15.3/postgres-alpine.grype.json"
+            }
+          ]
+        }
+      ]
+    },
+    "ironbank": {
+      "support": "enterprise",
+      "notes": "Hardened image from Platform One Iron Bank",
+      "versions": [
+        {
+          "version": "15.3",
+          "released": "2023-05-15T00:00:00Z",
+          "zarfPackage": {
+            "registry": "oci://ghcr.io/d0s-dev/postgresql-ironbank",
+            "tag": "15.3"
+          },
+          "aggregates": {
+            "critical": 0,
+            "high": 0,
+            "medium": 0,
+            "low": 0
+          },
+          "images": [
+            {
+              "name": "registry1.dso.mil/ironbank/opensource/postgres/postgresql:15.3",
+              "digest": "sha256:aec121f029bcf93ce0e99a362736a86a5054360e5811627ababdcbe52e736a51",
+              "size": "156.8 MB",
+              "role": "runtime",
+              "platforms": [
+                "linux/amd64"
+              ],
+              "baseImage": "registry1.dso.mil/ironbank/redhat/ubi/ubi8",
+              "sbom": "./sboms/ironbank/15.3/postgres.syft.json",
+              "cves": "./scans/ironbank/15.3/postgres.grype.json"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "lastScanned": "2025-10-30T03:31:33.355Z"
+}

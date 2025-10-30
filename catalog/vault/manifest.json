@@ -1,0 +1,92 @@
+{
+  "id": "vault",
+  "name": "HashiCorp Vault",
+  "summary": "Secure secrets management and encryption",
+  "description": "Vault is a tool for securely accessing secrets. A secret is anything that you want to tightly control access to, such as API keys, passwords, or certificates. Vault provides a unified interface to any secret, while providing tight access control and recording a detailed audit log.",
+  "upstream": {
+    "helm": {
+      "name": "vault",
+      "repo": "https://helm.releases.hashicorp.com",
+      "documentation": "https://developer.hashicorp.com/vault/docs/platform/k8s/helm"
+    },
+    "git": "https://github.com/hashicorp/vault",
+    "website": "https://www.vaultproject.io/"
+  },
+  "labels": [
+    "security",
+    "secrets",
+    "encryption"
+  ],
+  "providers": {
+    "vendor": {
+      "support": "enterprise",
+      "notes": "Official HashiCorp Vault image",
+      "versions": [
+        {
+          "version": "1.15.0",
+          "released": "2023-10-16T00:00:00Z",
+          "zarfPackage": {
+            "registry": "oci://ghcr.io/d0s-dev/vault",
+            "tag": "1.15.0"
+          },
+          "aggregates": {
+            "critical": 0,
+            "high": 0,
+            "medium": 0,
+            "low": 0
+          },
+          "images": [
+            {
+              "name": "hashicorp/vault:1.15.0",
+              "digest": "sha256:11cc9272afc357575d8ae434a6482b827647ae8fcdd541a8f9130857541be8f2",
+              "size": "156.3 MB",
+              "role": "runtime",
+              "platforms": [
+                "linux/amd64",
+                "linux/arm64"
+              ],
+              "baseImage": "alpine:3.18",
+              "sbom": "./sboms/vendor/1.15.0/vault.syft.json",
+              "cves": "./scans/vendor/1.15.0/vault.grype.json"
+            }
+          ]
+        }
+      ]
+    },
+    "ironbank": {
+      "support": "enterprise",
+      "notes": "Hardened image from Platform One Iron Bank",
+      "versions": [
+        {
+          "version": "1.15.0",
+          "released": "2023-10-20T00:00:00Z",
+          "zarfPackage": {
+            "registry": "oci://ghcr.io/d0s-dev/vault-ironbank",
+            "tag": "1.15.0"
+          },
+          "aggregates": {
+            "critical": 0,
+            "high": 0,
+            "medium": 0,
+            "low": 0
+          },
+          "images": [
+            {
+              "name": "registry1.dso.mil/ironbank/hashicorp/vault:1.15.0",
+              "digest": "sha256:e2853958c711348729e8d97ec574ceeac1d2da3d858680ac0e55825bf01d6747",
+              "size": "187.4 MB",
+              "role": "runtime",
+              "platforms": [
+                "linux/amd64"
+              ],
+              "baseImage": "registry1.dso.mil/ironbank/redhat/ubi/ubi8",
+              "sbom": "./sboms/ironbank/1.15.0/vault.syft.json",
+              "cves": "./scans/ironbank/1.15.0/vault.grype.json"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "lastScanned": "2025-10-30T03:31:33.356Z"
+}

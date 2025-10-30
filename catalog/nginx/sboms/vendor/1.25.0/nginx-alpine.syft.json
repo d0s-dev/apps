@@ -1,0 +1,48 @@
+{
+  "artifacts": [
+    {
+      "id": "5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+      "name": "nginx:1.25.0-alpine",
+      "version": "",
+      "type": "apk",
+      "foundBy": "syft-apk-cataloger",
+      "locations": [
+        {
+          "path": "/lib/apk/db/installed",
+          "layerID": "sha256:abc123"
+        }
+      ],
+      "licenses": [
+        "BSD-2-Clause"
+      ],
+      "language": "",
+      "cpes": [
+        "cpe:2.3:a:nginx:nginx:1.25.0:*:*:*:*:*:*:*"
+      ],
+      "purl": "pkg:apk/alpine/nginx@1.25.0?arch=x86_64&upstream=nginx&distro=alpine-3.18.4"
+    }
+  ],
+  "artifactRelationships": [],
+  "source": {
+    "type": "image",
+    "target": "nginx:1.25.0-alpine"
+  },
+  "distro": {
+    "name": "alpine",
+    "version": "3.18.4",
+    "idLike": []
+  },
+  "descriptor": {
+    "name": "syft",
+    "version": "0.95.0",
+    "configuration": {
+      "catalogers": {
+        "enabled": ["apk-cataloger", "binary-cataloger"]
+      }
+    }
+  },
+  "schema": {
+    "version": "8.0.1",
+    "url": "https://raw.githubusercontent.com/anchore/syft/main/schema/json/schema-8.0.1.json"
+  }
+}

@@ -1,0 +1,33 @@
+kind: ZarfPackageConfig
+metadata:
+  name: nginx
+  description: "High-performance web server and reverse proxy"
+  version: "1.25.0"
+  url: "https://nginx.org/"
+  image: "nginx.png"
+  authors:
+    - "d0s-dev"
+
+variables:
+  - name: DOMAIN
+    description: "Domain name for nginx ingress"
+    default: "localhost"
+
+components:
+  - name: nginx-ingress-controller
+    required: true
+    description: "Deploy nginx ingress controller"
+    charts:
+      - name: ingress-nginx
+        version: "4.8.3"
+        namespace: ingress-nginx
+        url: https://kubernetes.github.io/ingress-nginx
+        valuesFiles:
+          - "nginx-values.yaml"
+    images:
+      - "registry.k8s.io/ingress-nginx/controller:v1.9.4@sha256:abc123def456789012345678901234567890abcdef123456789012345678901234"
+      - "registry.k8s.io/ingress-nginx/kube-webhook-certgen:v20231011-8b53cabe0@sha256:def456ghi789012345678901234567890abcdef123456789012345678901234567"
+    manifests:
+      - name: nginx-default-backend
+        files:
+          - "manifests/default-backend.yaml"

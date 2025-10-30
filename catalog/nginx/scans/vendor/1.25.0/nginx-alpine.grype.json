@@ -1,0 +1,96 @@
+{
+  "vulnerabilities": [
+    {
+      "id": "CVE-2024-1234",
+      "severity": "High",
+      "package": {
+        "id": "5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+        "name": "openssl",
+        "version": "3.1.0",
+        "type": "apk"
+      },
+      "vulnerability": {
+        "id": "CVE-2024-1234",
+        "dataSource": "https://security.alpinelinux.org/vuln/CVE-2024-1234",
+        "namespace": "alpine:distro:alpine:3.18",
+        "severity": "High",
+        "urls": ["https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-1234"],
+        "description": "Buffer overflow vulnerability in SSL/TLS implementation",
+        "cvss": [
+          {
+            "version": "3.1",
+            "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+            "metrics": {
+              "baseScore": 9.8,
+              "exploitabilityScore": 3.9,
+              "impactScore": 5.9
+            }
+          }
+        ]
+      },
+      "relatedVulnerabilities": [],
+      "matchDetails": [
+        {
+          "type": "exact-direct-match",
+          "matcher": "apk-matcher",
+          "searchedBy": {
+            "distro": {
+              "type": "alpine",
+              "version": "3.18.4"
+            },
+            "package": {
+              "name": "openssl",
+              "version": "3.1.0"
+            }
+          },
+          "found": {
+            "vulnerabilityID": "CVE-2024-1234",
+            "versionConstraint": "< 3.1.4"
+          }
+        }
+      ],
+      "artifact": {
+        "id": "5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+        "name": "openssl",
+        "version": "3.1.0",
+        "type": "apk",
+        "locations": [
+          {
+            "path": "/lib/apk/db/installed",
+            "layerID": "sha256:abc123"
+          }
+        ],
+        "language": "",
+        "licenses": ["Apache-2.0"],
+        "cpes": ["cpe:2.3:a:openssl:openssl:3.1.0:*:*:*:*:*:*:*"],
+        "purl": "pkg:apk/alpine/openssl@3.1.0?arch=x86_64&distro=alpine-3.18.4"
+      }
+    }
+  ],
+  "source": {
+    "type": "image",
+    "target": "nginx:1.25.0-alpine"
+  },
+  "distro": {
+    "name": "alpine",
+    "version": "3.18.4",
+    "idLike": []
+  },
+  "descriptor": {
+    "name": "grype",
+    "version": "0.74.0",
+    "configuration": {
+      "config-path": "",
+      "verbosity": 0,
+      "quiet": false,
+      "output": "json"
+    },
+    "db": {
+      "built": "2025-10-29T05:30:00Z",
+      "schemaVersion": 5,
+      "location": "/home/user/.cache/grype/db/5",
+      "checksum": "sha256:def456789012345",
+      "error": null
+    }
+  }
+}

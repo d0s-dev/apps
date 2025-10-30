@@ -1,0 +1,141 @@
+name: Refresh Catalog
+
+on:
+  # Run daily at 6 AM UTC to refresh vulnerability data
+  schedule:
+    - cron: '0 6 * * *'
+  
+  # Allow manual triggering
+  workflow_dispatch:
+  
+  # Run on pushes to main that modify catalog data
+  push:
+    branches: [ main ]
+    paths:
+      - 'catalog/*/manifest.json'
+      - 'catalog/*/sboms/**'
+      - 'catalog/*/scans/**'
+
+jobs:
+  refresh-catalog:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write
+      
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate manifests
+        run: npm run validate
+
+      - name: Refresh catalog data
+        run: npm run refresh
+
+      - name: Check for changes
+        id: git-check
+        run: |
+          git diff --exit-code catalog/apps.json || echo "changed=true" >> $GITHUB_OUTPUT
+
+      - name: Commit updated catalog
+        if: steps.git-check.outputs.changed == 'true'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add catalog/apps.json
+          
+          # Include timestamp and trigger information in commit message
+          if [[ "${{ github.event_name }}" == "schedule" ]]; then
+            git commit -m "chore: refresh catalog data (scheduled) [skip ci]
+
+            - Updated CVE aggregates from latest scans
+            - Refreshed last scanned timestamps
+            - Regenerated master catalog"
+          else
+            git commit -m "chore: refresh catalog data [skip ci]
+
+            - Updated from manifest changes
+            - Regenerated master catalog"
+          fi
+
+      - name: Push changes
+        if: steps.git-check.outputs.changed == 'true'
+        run: git push
+
+      - name: Generate summary
+        run: |
+          echo "## Catalog Refresh Summary" >> $GITHUB_STEP_SUMMARY
+          echo "**Timestamp:** $(date -u)" >> $GITHUB_STEP_SUMMARY
+          echo "**Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          
+          APP_COUNT=$(jq '.apps | length' catalog/apps.json)
+          TOTAL_IMAGES=$(jq '[.apps[].imageCount] | add' catalog/apps.json)
+          TOTAL_CVES=$(jq '[.apps[].cves | .critical + .high + .medium + .low] | add' catalog/apps.json)
+          
+          echo "**Applications:** ${APP_COUNT}" >> $GITHUB_STEP_SUMMARY
+          echo "**Total Images:** ${TOTAL_IMAGES}" >> $GITHUB_STEP_SUMMARY  
+          echo "**Total CVEs:** ${TOTAL_CVES}" >> $GITHUB_STEP_SUMMARY
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### CVE Summary by Severity" >> $GITHUB_STEP_SUMMARY
+          
+          CRITICAL=$(jq '[.apps[].cves.critical] | add' catalog/apps.json)
+          HIGH=$(jq '[.apps[].cves.high] | add' catalog/apps.json)
+          MEDIUM=$(jq '[.apps[].cves.medium] | add' catalog/apps.json)
+          LOW=$(jq '[.apps[].cves.low] | add' catalog/apps.json)
+          
+          echo "- **Critical:** ${CRITICAL}" >> $GITHUB_STEP_SUMMARY
+          echo "- **High:** ${HIGH}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Medium:** ${MEDIUM}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Low:** ${LOW}" >> $GITHUB_STEP_SUMMARY
+
+  validate-pr:
+    # Run validation on pull requests
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate manifests
+        run: npm run validate
+
+      - name: Test catalog generation
+        run: npm run refresh
+
+      - name: Check catalog integrity
+        run: |
+          # Verify apps.json is valid JSON
+          jq empty catalog/apps.json
+          
+          # Verify all referenced manifests exist
+          jq -r '.apps[].id' catalog/apps.json | while read app_id; do
+            if [[ ! -f "catalog/${app_id}/manifest.json" ]]; then
+              echo "ERROR: Missing manifest for app: ${app_id}"
+              exit 1
+            fi
+          done
+          
+          echo "✅ Catalog integrity check passed"

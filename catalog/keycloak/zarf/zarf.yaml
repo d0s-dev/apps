@@ -1,0 +1,49 @@
+kind: ZarfPackageConfig
+metadata:
+  name: keycloak
+  description: "Open source identity and access management"
+  version: "23.0.0"
+  url: "https://www.keycloak.org/"
+  image: "keycloak.png"
+  authors:
+    - "d0s-dev"
+
+variables:
+  - name: KEYCLOAK_ADMIN
+    description: "Keycloak admin username"
+    default: "admin"
+  - name: KC_HOSTNAME
+    description: "Keycloak hostname"
+    default: "keycloak.localhost"
+
+components:
+  - name: keycloak-operator
+    required: true
+    description: "Deploy Keycloak Operator"
+    manifests:
+      - name: keycloak-operator-crds
+        files:
+          - "manifests/keycloak-operator-crds.yaml"
+      - name: keycloak-operator
+        files:
+          - "manifests/keycloak-operator.yaml"
+    images:
+      - "quay.io/keycloak/keycloak-operator:23.0.0@sha256:stu901vwx234567890abcdef123456789012345678901234567890abcdef123456"
+
+  - name: keycloak-instance
+    required: true
+    description: "Deploy Keycloak instance"
+    manifests:
+      - name: keycloak-instance
+        files:
+          - "manifests/keycloak-instance.yaml"
+    images:
+      - "quay.io/keycloak/keycloak:23.0.0@sha256:vwx234yzab567890abcdef123456789012345678901234567890abcdef123456789"
+
+  - name: postgres-cluster
+    required: true
+    description: "Deploy PostgreSQL cluster for Keycloak"
+    manifests:
+      - name: postgres-cluster
+        files:
+          - "manifests/postgres-cluster.yaml"

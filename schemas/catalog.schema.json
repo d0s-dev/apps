@@ -1,0 +1,95 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Apps Catalog Schema",
+  "type": "object",
+  "required": ["version", "lastUpdated", "apps"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Catalog schema version"
+    },
+    "lastUpdated": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp when catalog was last updated"
+    },
+    "apps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "summary", "labels", "providers", "imageCount", "cves", "latestVersion"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$",
+            "description": "Unique identifier for the app"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Display name of the app"
+          },
+          "summary": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Brief description for catalog cards"
+          },
+          "labels": {
+            "type": "array",
+            "items": {"type": "string"},
+            "uniqueItems": true,
+            "description": "Categories and tags for filtering"
+          },
+          "providers": {
+            "type": "array",
+            "items": {"type": "string"},
+            "uniqueItems": true,
+            "description": "Available provider variants"
+          },
+          "hasIronBank": {
+            "type": "boolean",
+            "description": "Whether Iron Bank images are available"
+          },
+          "hasChainguard": {
+            "type": "boolean",
+            "description": "Whether Chainguard images are available"
+          },
+          "imageCount": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Total number of container images"
+          },
+          "cves": {
+            "type": "object",
+            "properties": {
+              "critical": {"type": "integer", "minimum": 0},
+              "high": {"type": "integer", "minimum": 0},
+              "medium": {"type": "integer", "minimum": 0},
+              "low": {"type": "integer", "minimum": 0}
+            },
+            "description": "Aggregated CVE counts across all variants"
+          },
+          "latestVersion": {
+            "type": "string",
+            "description": "Latest version available"
+          },
+          "zarfPackage": {
+            "type": "string",
+            "description": "Path to default Zarf package"
+          },
+          "links": {
+            "type": "object",
+            "properties": {
+              "helm": {"type": "string", "format": "uri"},
+              "documentation": {"type": "string", "format": "uri"},
+              "git": {"type": "string", "format": "uri"},
+              "website": {"type": "string", "format": "uri"}
+            },
+            "description": "Related links and documentation"
+          }
+        }
+      }
+    }
+  }
+}

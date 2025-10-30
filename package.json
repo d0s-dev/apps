@@ -1,0 +1,36 @@
+{
+  "name": "@d0s-dev/apps-catalog",
+  "version": "1.0.0",
+  "description": "D0S application catalog with Zarf packages and security data",
+  "main": "catalog.js",
+  "scripts": {
+    "validate": "node catalog.js validate",
+    "refresh": "node catalog.js refresh",
+    "build": "npm run validate && npm run refresh",
+    "test": "npm run validate"
+  },
+  "dependencies": {
+    "ajv": "^8.12.0",
+    "ajv-formats": "^2.1.1"
+  },
+  "devDependencies": {
+    "prettier": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/d0s-dev/apps.git"
+  },
+  "keywords": [
+    "kubernetes",
+    "zarf",
+    "security",
+    "sbom",
+    "cve",
+    "catalog"
+  ],
+  "author": "d0s-dev",
+  "license": "Apache-2.0"
+}

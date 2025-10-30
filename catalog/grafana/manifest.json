@@ -1,0 +1,105 @@
+{
+  "id": "grafana",
+  "name": "Grafana",
+  "summary": "Analytics and monitoring platform",
+  "description": "Grafana is a multi-platform open source analytics and interactive visualization web application. It provides charts, graphs, and alerts for the web when connected to supported data sources. It is expandable through a plug-in system.",
+  "upstream": {
+    "helm": {
+      "name": "grafana",
+      "repo": "https://grafana.github.io/helm-charts",
+      "documentation": "https://github.com/grafana/helm-charts/tree/main/charts/grafana"
+    },
+    "git": "https://github.com/grafana/grafana",
+    "website": "https://grafana.com/"
+  },
+  "labels": [
+    "monitoring",
+    "observability",
+    "visualization"
+  ],
+  "providers": {
+    "vendor": {
+      "support": "community",
+      "notes": "Official Grafana image",
+      "versions": [
+        {
+          "version": "10.2.0",
+          "released": "2023-10-24T00:00:00Z",
+          "zarfPackage": {
+            "registry": "oci://ghcr.io/d0s-dev/grafana",
+            "tag": "10.2.0"
+          },
+          "aggregates": {
+            "critical": 0,
+            "high": 0,
+            "medium": 0,
+            "low": 0
+          },
+          "images": [
+            {
+              "name": "grafana/grafana:10.2.0",
+              "digest": "sha256:19615ef6c63d2c173f2669872774656ead0f2450f2e2cd7d89929998c73f5df2",
+              "size": "298.7 MB",
+              "role": "runtime",
+              "platforms": [
+                "linux/amd64",
+                "linux/arm64"
+              ],
+              "baseImage": "ubuntu:22.04",
+              "sbom": "./sboms/vendor/10.2.0/grafana.syft.json",
+              "cves": "./scans/vendor/10.2.0/grafana.grype.json"
+            },
+            {
+              "name": "grafana/grafana:10.2.0-ubuntu",
+              "digest": "sha256:492aa22dc036d5a3375361e6d09f984374054834671e9d438c6771291f26a08c",
+              "size": "412.3 MB",
+              "role": "runtime",
+              "platforms": [
+                "linux/amd64",
+                "linux/arm64"
+              ],
+              "baseImage": "ubuntu:22.04",
+              "sbom": "./sboms/vendor/10.2.0/grafana-ubuntu.syft.json",
+              "cves": "./scans/vendor/10.2.0/grafana-ubuntu.grype.json"
+            }
+          ]
+        }
+      ]
+    },
+    "ironbank": {
+      "support": "enterprise",
+      "notes": "Hardened image from Platform One Iron Bank",
+      "versions": [
+        {
+          "version": "10.2.0",
+          "released": "2023-10-28T00:00:00Z",
+          "zarfPackage": {
+            "registry": "oci://ghcr.io/d0s-dev/grafana-ironbank",
+            "tag": "10.2.0"
+          },
+          "aggregates": {
+            "critical": 0,
+            "high": 0,
+            "medium": 0,
+            "low": 0
+          },
+          "images": [
+            {
+              "name": "registry1.dso.mil/ironbank/big-bang/grafana:10.2.0",
+              "digest": "sha256:a4c4e6fe115f137c6e516247a529e39c0a29b34091869daf181b3abc5fdeba85",
+              "size": "356.9 MB",
+              "role": "runtime",
+              "platforms": [
+                "linux/amd64"
+              ],
+              "baseImage": "registry1.dso.mil/ironbank/redhat/ubi/ubi8",
+              "sbom": "./sboms/ironbank/10.2.0/grafana.syft.json",
+              "cves": "./scans/ironbank/10.2.0/grafana.grype.json"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "lastScanned": "2025-10-30T03:31:33.349Z"
+}
