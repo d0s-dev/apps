@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "lastUpdated": "2025-11-03T00:24:27.581Z",
+  "lastUpdated": "2025-11-03T06:40:19.153Z",
   "apps": [
     {
       "id": "grafana",
@@ -19,10 +19,10 @@
       "hasChainguard": false,
       "imageCount": 3,
       "cves": {
-        "critical": 1,
-        "high": 3,
-        "medium": 10,
-        "low": 20
+        "critical": 0,
+        "high": 0,
+        "medium": 0,
+        "low": 0
       },
       "latestVersion": "10.2.0",
       "zarfPackage": "catalog/grafana/zarf/zarf.yaml",
