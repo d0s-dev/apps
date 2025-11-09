@@ -1,93 +1,117 @@
 {
+  "category": "Uncategorized",
+  "description": "Redis(R) is an open source, advanced key-value store. It is often referred to as a data structure server since keys can contain strings, hashes, lists, sets and sorted sets.",
+  "homepage": "https://bitnami.com",
   "id": "redis",
-  "name": "Redis",
-  "summary": "In-memory data structure store",
-  "description": "Redis is an in-memory data structure store, used as a distributed, in-memory key–value database, cache and message broker, with optional durability. Redis supports different kinds of abstract data structures, such as strings, lists, maps, sets, sorted sets, HyperLogLogs, bitmaps, streams, and spatial indices.",
-  "upstream": {
-    "helm": {
-      "name": "redis",
-      "repo": "https://charts.bitnami.com/bitnami",
-      "documentation": "https://github.com/bitnami/charts/tree/main/bitnami/redis"
-    },
-    "git": "https://github.com/redis/redis",
-    "website": "https://redis.io/"
-  },
-  "labels": [
-    "database",
-    "cache",
-    "nosql"
-  ],
+  "name": "redis",
   "providers": {
     "vendor": {
       "support": "community",
-      "notes": "Official Redis image",
       "versions": [
         {
-          "version": "7.2.0",
-          "released": "2023-08-15T00:00:00Z",
-          "zarfPackage": {
-            "registry": "oci://ghcr.io/d0s-dev/redis",
-            "tag": "7.2.0"
-          },
           "aggregates": {
             "critical": 0,
             "high": 0,
-            "medium": 0,
-            "low": 0
+            "low": 0,
+            "medium": 0
           },
           "images": [
             {
-              "name": "redis:7.2.0-alpine",
-              "digest": "sha256:5915428dc1ecba767b84121bef7de6b27de37fd78b269e54ebff1d3860ebaa69",
-              "size": "29.1 MB",
-              "role": "runtime",
+              "cves": {
+                "amd64": "./scans/vendor/23.2.10/bitnami-redis-amd64.grype.json",
+                "arm64": "./scans/vendor/23.2.10/bitnami-redis-arm64.grype.json"
+              },
+              "digest": "",
+              "name": "bitnami/redis:latest",
               "platforms": [
                 "linux/amd64",
                 "linux/arm64"
               ],
-              "baseImage": "alpine:3.18",
-              "sbom": "./sboms/vendor/7.2.0/redis-alpine.syft.json",
-              "cves": "./scans/vendor/7.2.0/redis-alpine.grype.json"
-            }
-          ]
-        }
-      ]
-    },
-    "chainguard": {
-      "support": "enterprise",
-      "notes": "Distroless image from Chainguard with minimal attack surface",
-      "versions": [
-        {
-          "version": "7.2.0",
-          "released": "2023-08-18T00:00:00Z",
-          "zarfPackage": {
-            "registry": "oci://ghcr.io/d0s-dev/redis-chainguard",
-            "tag": "7.2.0"
-          },
-          "aggregates": {
-            "critical": 0,
-            "high": 0,
-            "medium": 0,
-            "low": 0
-          },
-          "images": [
+              "sbom": {
+                "amd64": "./sboms/vendor/23.2.10/bitnami-redis-amd64.syft.json",
+                "arm64": "./sboms/vendor/23.2.10/bitnami-redis-arm64.syft.json"
+              }
+            },
             {
-              "name": "cgr.dev/chainguard/redis:latest",
-              "digest": "sha256:dc1c53a59f24ab474798a705426bc2db26038b1f79175983dc812358cbf6303b",
-              "size": "24.8 MB",
-              "role": "runtime",
+              "cves": {
+                "amd64": "./scans/vendor/23.2.10/bitnami-redis-sentinel-amd64.grype.json",
+                "arm64": "./scans/vendor/23.2.10/bitnami-redis-sentinel-arm64.grype.json"
+              },
+              "digest": "",
+              "name": "bitnami/redis-sentinel:latest",
+              "platforms": [
+                "linux/arm64",
+                "linux/amd64"
+              ],
+              "sbom": {
+                "amd64": "./sboms/vendor/23.2.10/bitnami-redis-sentinel-amd64.syft.json",
+                "arm64": "./sboms/vendor/23.2.10/bitnami-redis-sentinel-arm64.syft.json"
+              }
+            },
+            {
+              "cves": {
+                "amd64": "./scans/vendor/23.2.10/bitnami-os-shell-amd64.grype.json",
+                "arm64": "./scans/vendor/23.2.10/bitnami-os-shell-arm64.grype.json"
+              },
+              "digest": "",
+              "name": "bitnami/os-shell:latest",
+              "platforms": [
+                "linux/arm64",
+                "linux/amd64"
+              ],
+              "sbom": {
+                "amd64": "./sboms/vendor/23.2.10/bitnami-os-shell-amd64.syft.json",
+                "arm64": "./sboms/vendor/23.2.10/bitnami-os-shell-arm64.syft.json"
+              }
+            },
+            {
+              "cves": {
+                "amd64": "./scans/vendor/23.2.10/bitnami-redis-exporter-amd64.grype.json",
+                "arm64": "./scans/vendor/23.2.10/bitnami-redis-exporter-arm64.grype.json"
+              },
+              "digest": "",
+              "name": "bitnami/redis-exporter:latest",
               "platforms": [
                 "linux/amd64",
                 "linux/arm64"
               ],
-              "baseImage": "cgr.dev/chainguard/wolfi-base",
-              "sbom": "./sboms/chainguard/7.2.0/redis.syft.json",
-              "cves": "./scans/chainguard/7.2.0/redis.grype.json"
+              "sbom": {
+                "amd64": "./sboms/vendor/23.2.10/bitnami-redis-exporter-amd64.syft.json",
+                "arm64": "./sboms/vendor/23.2.10/bitnami-redis-exporter-arm64.syft.json"
+              }
+            },
+            {
+              "cves": {
+                "amd64": "./scans/vendor/23.2.10/bitnami-kubectl-amd64.grype.json",
+                "arm64": "./scans/vendor/23.2.10/bitnami-kubectl-arm64.grype.json"
+              },
+              "digest": "",
+              "name": "bitnami/kubectl:latest",
+              "platforms": [
+                "linux/arm64",
+                "linux/amd64"
+              ],
+              "sbom": {
+                "amd64": "./sboms/vendor/23.2.10/bitnami-kubectl-amd64.syft.json",
+                "arm64": "./sboms/vendor/23.2.10/bitnami-kubectl-arm64.syft.json"
+              }
             }
-          ]
+          ],
+          "released": "2025-11-07T00:26:47-05:00",
+          "version": "23.2.10",
+          "zarfPackage": {
+            "registry": "oci://ghcr.io/d0s-dev/apps/redis",
+            "tag": "23.2.10"
+          }
         }
       ]
     }
   },
-  "lastScanned": "2025-10-30T03:31:33.355Z"
+  "upstream": {
+    "helm": {
+      "autoUpdate": true,
+      "name": "redis",
+      "repo": "https://charts.bitnami.com/bitnami"
+    }
+  }
 }
