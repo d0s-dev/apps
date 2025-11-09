@@ -1,0 +1,60 @@
+{
+  "category": "Uncategorized",
+  "description": "Crossplane is an open source Kubernetes add-on that enables platform teams to assemble infrastructure from multiple vendors, and expose higher level self-service APIs for application teams to consume.",
+  "homepage": "https://crossplane.io",
+  "id": "crossplane",
+  "name": "crossplane",
+  "providers": {
+    "vendor": {
+      "support": "community",
+      "versions": [
+        {
+          "aggregates": {
+            "critical": 0,
+            "high": 20,
+            "low": 0,
+            "medium": 28
+          },
+          "images": [
+            {
+              "cves": {
+                "amd64": "./crossplane/scans/vendor/2.1.0/xpkg.crossplane.io-crossplane-crossplane-v2.1.0-amd64.grype.json",
+                "arm": "./crossplane/scans/vendor/2.1.0/xpkg.crossplane.io-crossplane-crossplane-v2.1.0-arm.grype.json",
+                "arm64": "./crossplane/scans/vendor/2.1.0/xpkg.crossplane.io-crossplane-crossplane-v2.1.0-arm64.grype.json",
+                "ppc64le": "./crossplane/scans/vendor/2.1.0/xpkg.crossplane.io-crossplane-crossplane-v2.1.0-ppc64le.grype.json"
+              },
+              "digest": "",
+              "name": "xpkg.crossplane.io/crossplane/crossplane:v2.1.0",
+              "platforms": [
+                "linux/arm64",
+                "linux/ppc64le",
+                "linux/arm",
+                "linux/amd64"
+              ],
+              "sbom": {
+                "amd64": "./crossplane/sboms/vendor/2.1.0/xpkg.crossplane.io-crossplane-crossplane-v2.1.0-amd64.syft.json",
+                "arm": "./crossplane/sboms/vendor/2.1.0/xpkg.crossplane.io-crossplane-crossplane-v2.1.0-arm.syft.json",
+                "arm64": "./crossplane/sboms/vendor/2.1.0/xpkg.crossplane.io-crossplane-crossplane-v2.1.0-arm64.syft.json",
+                "ppc64le": "./crossplane/sboms/vendor/2.1.0/xpkg.crossplane.io-crossplane-crossplane-v2.1.0-ppc64le.syft.json"
+              }
+            }
+          ],
+          "released": "2025-11-09T14:29:05-05:00",
+          "version": "2.1.0",
+          "zarfPackage": {
+            "built": "2025-11-09T14:37:18-05:00",
+            "registry": "oci://ghcr.io/d0s-dev/apps/crossplane:2.1.0",
+            "tag": "2.1.0"
+          }
+        }
+      ]
+    }
+  },
+  "upstream": {
+    "helm": {
+      "autoUpdate": true,
+      "name": "crossplane",
+      "repo": "https://charts.crossplane.io/stable"
+    }
+  }
+}

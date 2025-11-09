@@ -1,0 +1,18 @@
+components:
+    - charts:
+        - name: crossplane
+          namespace: default
+          url: oci://ghcr.io/d0s-dev/apps/helm/crossplane
+          valuesFiles:
+            - values.yaml
+          version: 2.1.0
+      description: crossplane application
+      images:
+        - xpkg.crossplane.io/crossplane/crossplane:v2.1.0
+      name: crossplane-chart
+      required: true
+kind: ZarfPackageConfig
+metadata:
+    description: crossplane Helm chart
+    name: crossplane
+    version: 2.1.0
