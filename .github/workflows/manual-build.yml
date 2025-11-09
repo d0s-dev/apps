@@ -1,0 +1,174 @@
+name: Manual Package Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      app_id:
+        description: 'App ID to build (e.g., nginx, postgresql, redis)'
+        required: true
+        type: string
+      chart_version:
+        description: 'Chart version (leave empty for latest)'
+        required: false
+        type: string
+      push_package:
+        description: 'Push package to OCI registry'
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  build:
+    name: Build ${{ inputs.app_id }}
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout apps repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+      
+      - name: Checkout d0s CLI repository
+        uses: actions/checkout@v4
+        with:
+          repository: d0s-dev/d0s
+          ref: alpha-release
+          path: d0s-repo
+      
+      - name: Build and install d0s CLI
+        run: |
+          cd d0s-repo
+          go build -o d0s ./cmd/d0s
+          sudo mv d0s /usr/local/bin/d0s
+          d0s version
+      
+      - name: Validate app exists
+        run: |
+          if [ ! -d "catalog/${{ inputs.app_id }}" ]; then
+            echo "Error: App '${{ inputs.app_id }}' not found in catalog"
+            exit 1
+          fi
+          echo "App found: ${{ inputs.app_id }}"
+      
+      - name: Get current version
+        id: current
+        run: |
+          if [ -f "catalog/${{ inputs.app_id }}/manifest.json" ]; then
+            CURRENT_VERSION=$(jq -r '.providers.vendor.versions[0].version // "none"' catalog/${{ inputs.app_id }}/manifest.json)
+            echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+            echo "Current version: $CURRENT_VERSION"
+          else
+            echo "version=none" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Update to specified version
+        id: update
+        run: |
+          cd catalog
+          
+          if [ -n "${{ inputs.chart_version }}" ]; then
+            echo "Updating to specific version: ${{ inputs.chart_version }}"
+            d0s package update ${{ inputs.app_id }} --provider vendor --version ${{ inputs.chart_version }}
+            TARGET_VERSION="${{ inputs.chart_version }}"
+          else
+            echo "Updating to latest version"
+            d0s package update ${{ inputs.app_id }} --provider vendor --latest
+            TARGET_VERSION=$(jq -r '.providers.vendor.versions[0].version' ${{ inputs.app_id }}/manifest.json)
+          fi
+          
+          echo "target_version=$TARGET_VERSION" >> $GITHUB_OUTPUT
+          echo "Updated to version: $TARGET_VERSION"
+      
+      - name: Scan images for vulnerabilities
+        run: |
+          cd catalog
+          d0s package scan ${{ inputs.app_id }} --provider vendor
+          echo "Scan completed"
+      
+      - name: Build Zarf package
+        id: build
+        run: |
+          cd catalog
+          
+          if [ "${{ inputs.push_package }}" = "true" ]; then
+            d0s package build ${{ inputs.app_id }} --provider vendor --push-oci
+            echo "Built and pushed to OCI"
+          else
+            d0s package build ${{ inputs.app_id }} --provider vendor
+            echo "Built locally (not pushed)"
+          fi
+          
+          # Get package info
+          VERSION="${{ steps.update.outputs.target_version }}"
+          echo "package_url=ghcr.io/d0s-dev/apps/${{ inputs.app_id }}:$VERSION" >> $GITHUB_OUTPUT
+      
+      - name: Commit changes
+        id: commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          TARGET_VERSION="${{ steps.update.outputs.target_version }}"
+          
+          if git diff --quiet catalog/${{ inputs.app_id }}/; then
+            echo "No changes detected"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            git add catalog/${{ inputs.app_id }}/
+            git commit -m "chore(${{ inputs.app_id }}): manual build of chart $TARGET_VERSION"
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "Committed changes"
+          fi
+      
+      - name: Push changes
+        if: steps.commit.outputs.has_changes == 'true'
+        run: |
+          git pull --rebase origin main
+          git push
+      
+      - name: Generate summary
+        if: always()
+        run: |
+          echo "## 📦 Manual Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**App:** ${{ inputs.app_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ steps.update.outputs.target_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f "catalog/${{ inputs.app_id }}/manifest.json" ]; then
+            VERSION=$(jq -r '.providers.vendor.versions[0].version' catalog/${{ inputs.app_id }}/manifest.json)
+            CRITICAL=$(jq -r '.providers.vendor.versions[0].aggregates.critical // 0' catalog/${{ inputs.app_id }}/manifest.json)
+            HIGH=$(jq -r '.providers.vendor.versions[0].aggregates.high // 0' catalog/${{ inputs.app_id }}/manifest.json)
+            MEDIUM=$(jq -r '.providers.vendor.versions[0].aggregates.medium // 0' catalog/${{ inputs.app_id }}/manifest.json)
+            LOW=$(jq -r '.providers.vendor.versions[0].aggregates.low // 0' catalog/${{ inputs.app_id }}/manifest.json)
+            IMAGES=$(jq -r '.providers.vendor.versions[0].images | length' catalog/${{ inputs.app_id }}/manifest.json)
+            
+            echo "**Images:** $IMAGES" >> $GITHUB_STEP_SUMMARY
+            echo "**CVEs:** 🔴 $CRITICAL Critical | 🟡 $HIGH High | 🟢 $MEDIUM Medium | ⚪ $LOW Low" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            
+            if [ "${{ inputs.push_package }}" = "true" ]; then
+              echo "**Status:** ✅ Built and pushed to OCI" >> $GITHUB_STEP_SUMMARY
+              echo "**OCI Package:** \`${{ steps.build.outputs.package_url }}\`" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "### Deploy Command" >> $GITHUB_STEP_SUMMARY
+              echo '```bash' >> $GITHUB_STEP_SUMMARY
+              echo "zarf package deploy oci://${{ steps.build.outputs.package_url }}" >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+            else
+              echo "**Status:** ✅ Built locally (not pushed)" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "❌ Manifest not found" >> $GITHUB_STEP_SUMMARY
+          fi

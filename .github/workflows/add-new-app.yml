@@ -1,0 +1,178 @@
+name: Add New App to Catalog
+
+on:
+  workflow_dispatch:
+    inputs:
+      chart_name:
+        description: 'Helm chart name (e.g., ingress-nginx, redis)'
+        required: true
+        type: string
+      chart_repo:
+        description: 'Helm chart repository URL'
+        required: true
+        type: string
+      chart_version:
+        description: 'Chart version (leave empty for latest)'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+  packages: write
+
+jobs:
+  scaffold:
+    name: Scaffold ${{ inputs.chart_name }}
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout apps repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+      
+      - name: Checkout d0s CLI repository
+        uses: actions/checkout@v4
+        with:
+          repository: d0s-dev/d0s
+          ref: alpha-release
+          path: d0s-repo
+      
+      - name: Build and install d0s CLI
+        run: |
+          cd d0s-repo
+          go build -o d0s ./cmd/d0s
+          sudo mv d0s /usr/local/bin/d0s
+          d0s version
+      
+      - name: Check if app already exists
+        run: |
+          if [ -d "catalog/${{ inputs.chart_name }}" ]; then
+            echo "Error: App '${{ inputs.chart_name }}' already exists in catalog"
+            echo "Use manual-build.yml workflow to update existing apps"
+            exit 1
+          fi
+          echo "App does not exist, proceeding with scaffold"
+      
+      - name: Scaffold new app
+        id: scaffold
+        run: |
+          cd catalog
+          
+          if [ -n "${{ inputs.chart_version }}" ]; then
+            echo "Scaffolding with specific version: ${{ inputs.chart_version }}"
+            d0s package scaffold ${{ inputs.chart_name }} \
+              --repo "${{ inputs.chart_repo }}" \
+              --version ${{ inputs.chart_version }}
+          else
+            echo "Scaffolding with latest version"
+            d0s package scaffold ${{ inputs.chart_name }} \
+              --repo "${{ inputs.chart_repo }}"
+          fi
+          
+          # Get the version that was scaffolded
+          VERSION=$(jq -r '.providers.vendor.versions[0].version // "unknown"' ${{ inputs.chart_name }}/manifest.json)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Scaffolded version: $VERSION"
+      
+      - name: Scan images for vulnerabilities
+        run: |
+          cd catalog
+          d0s package scan ${{ inputs.chart_name }} --provider vendor
+          echo "Scan completed"
+      
+      - name: Get scan results for PR body
+        id: scan_results
+        run: |
+          if [ -f "catalog/${{ inputs.chart_name }}/manifest.json" ]; then
+            CRITICAL=$(jq -r '.providers.vendor.versions[0].aggregates.critical // 0' catalog/${{ inputs.chart_name }}/manifest.json)
+            HIGH=$(jq -r '.providers.vendor.versions[0].aggregates.high // 0' catalog/${{ inputs.chart_name }}/manifest.json)
+            MEDIUM=$(jq -r '.providers.vendor.versions[0].aggregates.medium // 0' catalog/${{ inputs.chart_name }}/manifest.json)
+            LOW=$(jq -r '.providers.vendor.versions[0].aggregates.low // 0' catalog/${{ inputs.chart_name }}/manifest.json)
+            IMAGES=$(jq -r '.providers.vendor.versions[0].images | length' catalog/${{ inputs.chart_name }}/manifest.json)
+            
+            echo "critical=$CRITICAL" >> $GITHUB_OUTPUT
+            echo "high=$HIGH" >> $GITHUB_OUTPUT
+            echo "medium=$MEDIUM" >> $GITHUB_OUTPUT
+            echo "low=$LOW" >> $GITHUB_OUTPUT
+            echo "images=$IMAGES" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Create Pull Request
+        id: pr
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "feat: add ${{ inputs.chart_name }} to catalog"
+          branch: add-app/${{ inputs.chart_name }}
+          delete-branch: true
+          title: "feat: add ${{ inputs.chart_name }} to catalog"
+          body: |
+            ## 🆕 New App: ${{ inputs.chart_name }}
+            
+            **Chart Version:** ${{ steps.scaffold.outputs.version }}  
+            **Chart Repository:** ${{ inputs.chart_repo }}
+            
+            ### 📊 Scan Results
+            
+            **Images:** ${{ steps.scan_results.outputs.images }}  
+            **CVEs:**
+            - 🔴 Critical: ${{ steps.scan_results.outputs.critical }}
+            - 🟡 High: ${{ steps.scan_results.outputs.high }}
+            - 🟢 Medium: ${{ steps.scan_results.outputs.medium }}
+            - ⚪ Low: ${{ steps.scan_results.outputs.low }}
+            
+            ### 📦 Files Added
+            
+            - `catalog/${{ inputs.chart_name }}/manifest.json`
+            - `catalog/${{ inputs.chart_name }}/zarf/vendor/zarf.yaml`
+            - `catalog/${{ inputs.chart_name }}/zarf/vendor/values.yaml`
+            - `catalog/${{ inputs.chart_name }}/sboms/vendor/${{ steps.scaffold.outputs.version }}/`
+            - `catalog/${{ inputs.chart_name }}/scans/vendor/${{ steps.scaffold.outputs.version }}/`
+            
+            ### ✅ Next Steps
+            
+            1. Review the generated `zarf.yaml` for correctness
+            2. Test build locally: `d0s package build ${{ inputs.chart_name }} --provider vendor`
+            3. Merge this PR to add the app to the catalog
+            4. Nightly builds will keep it up to date automatically
+            
+            ---
+            *This PR was automatically generated by the add-new-app workflow*
+          labels: |
+            new-app
+            automated
+      
+      - name: Generate summary
+        if: always()
+        run: |
+          echo "## 🆕 New App Scaffolded" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**App:** ${{ inputs.chart_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ steps.scaffold.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Repository:** ${{ inputs.chart_repo }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -n "${{ steps.pr.outputs.pull-request-number }}" ]; then
+            echo "### ✅ Pull Request Created" >> $GITHUB_STEP_SUMMARY
+            echo "**PR #${{ steps.pr.outputs.pull-request-number }}:** ${{ steps.pr.outputs.pull-request-url }}" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ -f "catalog/${{ inputs.chart_name }}/manifest.json" ]; then
+            CRITICAL=${{ steps.scan_results.outputs.critical }}
+            HIGH=${{ steps.scan_results.outputs.high }}
+            MEDIUM=${{ steps.scan_results.outputs.medium }}
+            LOW=${{ steps.scan_results.outputs.low }}
+            IMAGES=${{ steps.scan_results.outputs.images }}
+            
+            echo "### 📊 Scan Results" >> $GITHUB_STEP_SUMMARY
+            echo "**Images:** $IMAGES" >> $GITHUB_STEP_SUMMARY
+            echo "**CVEs:** 🔴 $CRITICAL Critical | 🟡 $HIGH High | 🟢 $MEDIUM Medium | ⚪ $LOW Low" >> $GITHUB_STEP_SUMMARY
+          fi

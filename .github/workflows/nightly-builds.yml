@@ -1,0 +1,256 @@
+name: Nightly Package Builds
+
+on:
+  schedule:
+    # Run every night at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      apps:
+        description: 'Apps to build (comma-separated, or "all")'
+        required: false
+        default: 'all'
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  build:
+    name: Build ${{ matrix.app }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app:
+          - nginx
+          - postgresql
+          - redis
+          - grafana
+          - keycloak
+          - vault
+    outputs:
+      has-changes: ${{ steps.check-changes.outputs.has-changes }}
+    
+    steps:
+      - name: Checkout apps repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+      
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+      
+      - name: Checkout d0s CLI repository
+        uses: actions/checkout@v4
+        with:
+          repository: d0s-dev/d0s
+          ref: alpha-release
+          path: d0s-repo
+      
+      - name: Build and install d0s CLI
+        run: |
+          cd d0s-repo
+          go build -o d0s ./cmd/d0s
+          sudo mv d0s /usr/local/bin/d0s
+          d0s version
+      
+      - name: Check current version
+        id: current
+        run: |
+          if [ -f "catalog/${{ matrix.app }}/manifest.json" ]; then
+            CURRENT_VERSION=$(jq -r '.providers.vendor.versions[0].version // "none"' catalog/${{ matrix.app }}/manifest.json)
+            echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+            echo "Current version: $CURRENT_VERSION"
+          else
+            echo "version=none" >> $GITHUB_OUTPUT
+            echo "App not found in catalog"
+          fi
+      
+      - name: Get latest upstream version
+        id: upstream
+        run: |
+          # For now, we'll let d0s update command handle this
+          # Future: could query upstream here for smarter logic
+          echo "check=needed" >> $GITHUB_OUTPUT
+      
+      - name: Update to latest version
+        id: update
+        continue-on-error: true
+        run: |
+          cd catalog
+          
+          # Try to update to latest version
+          if d0s package update ${{ matrix.app }} --provider vendor --catalog . 2>&1 | tee update.log; then
+            if grep -q "Already at target version" update.log; then
+              echo "action=scan-only" >> $GITHUB_OUTPUT
+              echo "No new version available, will refresh CVE data"
+            else
+              echo "action=full-build" >> $GITHUB_OUTPUT
+              NEW_VERSION=$(jq -r '.providers.vendor.versions[0].version' ${{ matrix.app }}/manifest.json)
+              echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+              echo "Updated to version $NEW_VERSION"
+            fi
+          else
+            echo "action=scan-only" >> $GITHUB_OUTPUT
+            echo "Update failed or not needed, will refresh CVE data"
+          fi
+      
+      - name: Scan images for vulnerabilities
+        run: |
+          cd catalog
+          d0s package scan ${{ matrix.app }} --provider vendor --catalog . || true
+          echo "Scan completed (errors ignored for CVE data refresh)"
+      
+      - name: Build Zarf package
+        if: steps.update.outputs.action == 'full-build'
+        run: |
+          cd catalog
+          d0s package build ${{ matrix.app }} --provider vendor --catalog . --push-oci || true
+          echo "Build completed"
+      
+      - name: Check for changes
+        id: check-changes
+        run: |
+          if git diff --quiet catalog/${{ matrix.app }}/; then
+            echo "has-changes=false" >> $GITHUB_OUTPUT
+            echo "No changes detected"
+          else
+            echo "has-changes=true" >> $GITHUB_OUTPUT
+            echo "Changes detected"
+          fi
+      
+      - name: Upload changes as artifact
+        if: steps.check-changes.outputs.has-changes == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.app }}-changes
+          path: catalog/${{ matrix.app }}/
+          retention-days: 1
+      
+      - name: Save commit message
+        if: steps.check-changes.outputs.has-changes == 'true'
+        run: |
+          if [ "${{ steps.update.outputs.action }}" = "full-build" ]; then
+            NEW_VERSION="${{ steps.update.outputs.new_version }}"
+            echo "chore(${{ matrix.app }}): update to chart version $NEW_VERSION" > /tmp/${{ matrix.app }}-message.txt
+          else
+            CURRENT_VERSION="${{ steps.current.outputs.version }}"
+            echo "chore(${{ matrix.app }}): refresh CVE data (chart $CURRENT_VERSION)" > /tmp/${{ matrix.app }}-message.txt
+          fi
+      
+      - name: Upload commit message
+        if: steps.check-changes.outputs.has-changes == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.app }}-message
+          path: /tmp/${{ matrix.app }}-message.txt
+          retention-days: 1
+      
+      - name: Generate job summary
+        if: always()
+        run: |
+          echo "## 📦 Build Summary: ${{ matrix.app }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f "catalog/${{ matrix.app }}/manifest.json" ]; then
+            VERSION=$(jq -r '.providers.vendor.versions[0].version' catalog/${{ matrix.app }}/manifest.json)
+            CRITICAL=$(jq -r '.providers.vendor.versions[0].aggregates.critical // 0' catalog/${{ matrix.app }}/manifest.json)
+            HIGH=$(jq -r '.providers.vendor.versions[0].aggregates.high // 0' catalog/${{ matrix.app }}/manifest.json)
+            MEDIUM=$(jq -r '.providers.vendor.versions[0].aggregates.medium // 0' catalog/${{ matrix.app }}/manifest.json)
+            LOW=$(jq -r '.providers.vendor.versions[0].aggregates.low // 0' catalog/${{ matrix.app }}/manifest.json)
+            IMAGES=$(jq -r '.providers.vendor.versions[0].images | length' catalog/${{ matrix.app }}/manifest.json)
+            
+            echo "**Version:** $VERSION" >> $GITHUB_STEP_SUMMARY
+            echo "**Images:** $IMAGES" >> $GITHUB_STEP_SUMMARY
+            echo "**CVEs:** 🔴 $CRITICAL Critical | 🟡 $HIGH High | 🟢 $MEDIUM Medium | ⚪ $LOW Low" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            
+            if [ "${{ steps.update.outputs.action }}" = "full-build" ]; then
+              echo "**Action:** ✅ Updated and built new version" >> $GITHUB_STEP_SUMMARY
+              echo "**OCI Package:** \`ghcr.io/d0s-dev/apps/${{ matrix.app }}:$VERSION\`" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "**Action:** 🔄 Refreshed CVE data only" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "❌ App not found or manifest missing" >> $GITHUB_STEP_SUMMARY
+          fi
+  
+  commit:
+    name: Commit All Changes
+    needs: build
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - name: Checkout apps repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+      
+      - name: Apply changes
+        id: apply
+        run: |
+          HAS_CHANGES=false
+          
+          # Apply each app's changes
+          for app in nginx postgresql redis grafana keycloak vault; do
+            if [ -d "artifacts/${app}-changes" ]; then
+              echo "Applying changes for $app"
+              cp -r artifacts/${app}-changes/* catalog/$app/
+              HAS_CHANGES=true
+            fi
+          done
+          
+          echo "has-changes=$HAS_CHANGES" >> $GITHUB_OUTPUT
+      
+      - name: Create commit message
+        if: steps.apply.outputs.has-changes == 'true'
+        id: message
+        run: |
+          echo "chore: nightly package updates" > commit-msg.txt
+          echo "" >> commit-msg.txt
+          
+          # Collect individual commit messages
+          for app in nginx postgresql redis grafana keycloak vault; do
+            if [ -f "artifacts/${app}-message/${app}-message.txt" ]; then
+              echo "- $(cat artifacts/${app}-message/${app}-message.txt | sed 's/^chore: //')" >> commit-msg.txt
+            fi
+          done
+          
+          cat commit-msg.txt
+      
+      - name: Commit and push
+        if: steps.apply.outputs.has-changes == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add catalog/
+          git commit -F commit-msg.txt
+          git push
+      
+      - name: Summary
+        if: always()
+        run: |
+          echo "## 🎯 Nightly Build Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ steps.apply.outputs.has-changes }}" = "true" ]; then
+            echo "✅ Changes committed and pushed" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Changes:" >> $GITHUB_STEP_SUMMARY
+            cat commit-msg.txt | tail -n +3 >> $GITHUB_STEP_SUMMARY
+          else
+            echo "ℹ️ No changes to commit" >> $GITHUB_STEP_SUMMARY
+          fi

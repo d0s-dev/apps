@@ -15,7 +15,58 @@
             "low": 0,
             "medium": 0
           },
-          "images": [],
+          "images": [
+            {
+              "cves": {},
+              "digest": "",
+              "name": "bitnami/redis-sentinel:latest",
+              "platforms": [
+                "linux/amd64",
+                "linux/arm64"
+              ],
+              "sbom": {}
+            },
+            {
+              "cves": {},
+              "digest": "",
+              "name": "bitnami/redis-exporter:latest",
+              "platforms": [
+                "linux/amd64",
+                "linux/arm64"
+              ],
+              "sbom": {}
+            },
+            {
+              "cves": {},
+              "digest": "",
+              "name": "bitnami/redis:latest",
+              "platforms": [
+                "linux/amd64",
+                "linux/arm64"
+              ],
+              "sbom": {}
+            },
+            {
+              "cves": {},
+              "digest": "",
+              "name": "bitnami/os-shell:latest",
+              "platforms": [
+                "linux/arm64",
+                "linux/amd64"
+              ],
+              "sbom": {}
+            },
+            {
+              "cves": {},
+              "digest": "",
+              "name": "bitnami/kubectl:latest",
+              "platforms": [
+                "linux/arm64",
+                "linux/amd64"
+              ],
+              "sbom": {}
+            }
+          ],
           "released": "TBD",
           "version": "23.2.11",
           "zarfPackage": {
