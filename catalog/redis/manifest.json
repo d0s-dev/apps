@@ -15,11 +15,43 @@
             "low": 0,
             "medium": 0
           },
+          "images": [],
+          "released": "TBD",
+          "version": "23.2.11",
+          "zarfPackage": {
+            "built": "2025-11-09T10:57:19-05:00",
+            "registry": "oci://ghcr.io/d0s-dev/apps/redis:23.2.11",
+            "tag": "23.2.11"
+          }
+        },
+        {
+          "aggregates": {
+            "critical": 0,
+            "high": 0,
+            "low": 0,
+            "medium": 0
+          },
+          "images": [],
+          "released": "TBD",
+          "version": "23.2.12",
+          "zarfPackage": {
+            "built": "2025-11-09T10:53:05-05:00",
+            "registry": "oci://ghcr.io/d0s-dev/apps/redis:23.2.12",
+            "tag": "23.2.12"
+          }
+        },
+        {
+          "aggregates": {
+            "critical": 0,
+            "high": 0,
+            "low": 0,
+            "medium": 0
+          },
           "images": [
             {
               "cves": {
-                "amd64": "./scans/vendor/23.2.10/bitnami-redis-amd64.grype.json",
-                "arm64": "./scans/vendor/23.2.10/bitnami-redis-arm64.grype.json"
+                "amd64": "./redis/scans/vendor/23.2.10/bitnami-redis-latest-amd64.grype.json",
+                "arm64": "./redis/scans/vendor/23.2.10/bitnami-redis-latest-arm64.grype.json"
               },
               "digest": "",
               "name": "bitnami/redis:latest",
@@ -28,14 +60,14 @@
                 "linux/arm64"
               ],
               "sbom": {
-                "amd64": "./sboms/vendor/23.2.10/bitnami-redis-amd64.syft.json",
-                "arm64": "./sboms/vendor/23.2.10/bitnami-redis-arm64.syft.json"
+                "amd64": "./redis/sboms/vendor/23.2.10/bitnami-redis-latest-amd64.syft.json",
+                "arm64": "./redis/sboms/vendor/23.2.10/bitnami-redis-latest-arm64.syft.json"
               }
             },
             {
               "cves": {
-                "amd64": "./scans/vendor/23.2.10/bitnami-redis-sentinel-amd64.grype.json",
-                "arm64": "./scans/vendor/23.2.10/bitnami-redis-sentinel-arm64.grype.json"
+                "amd64": "./redis/scans/vendor/23.2.10/bitnami-redis-sentinel-latest-amd64.grype.json",
+                "arm64": "./redis/scans/vendor/23.2.10/bitnami-redis-sentinel-latest-arm64.grype.json"
               },
               "digest": "",
               "name": "bitnami/redis-sentinel:latest",
@@ -44,14 +76,14 @@
                 "linux/amd64"
               ],
               "sbom": {
-                "amd64": "./sboms/vendor/23.2.10/bitnami-redis-sentinel-amd64.syft.json",
-                "arm64": "./sboms/vendor/23.2.10/bitnami-redis-sentinel-arm64.syft.json"
+                "amd64": "./redis/sboms/vendor/23.2.10/bitnami-redis-sentinel-latest-amd64.syft.json",
+                "arm64": "./redis/sboms/vendor/23.2.10/bitnami-redis-sentinel-latest-arm64.syft.json"
               }
             },
             {
               "cves": {
-                "amd64": "./scans/vendor/23.2.10/bitnami-os-shell-amd64.grype.json",
-                "arm64": "./scans/vendor/23.2.10/bitnami-os-shell-arm64.grype.json"
+                "amd64": "./redis/scans/vendor/23.2.10/bitnami-os-shell-latest-amd64.grype.json",
+                "arm64": "./redis/scans/vendor/23.2.10/bitnami-os-shell-latest-arm64.grype.json"
               },
               "digest": "",
               "name": "bitnami/os-shell:latest",
@@ -60,14 +92,14 @@
                 "linux/amd64"
               ],
               "sbom": {
-                "amd64": "./sboms/vendor/23.2.10/bitnami-os-shell-amd64.syft.json",
-                "arm64": "./sboms/vendor/23.2.10/bitnami-os-shell-arm64.syft.json"
+                "amd64": "./redis/sboms/vendor/23.2.10/bitnami-os-shell-latest-amd64.syft.json",
+                "arm64": "./redis/sboms/vendor/23.2.10/bitnami-os-shell-latest-arm64.syft.json"
               }
             },
             {
               "cves": {
-                "amd64": "./scans/vendor/23.2.10/bitnami-redis-exporter-amd64.grype.json",
-                "arm64": "./scans/vendor/23.2.10/bitnami-redis-exporter-arm64.grype.json"
+                "amd64": "./redis/scans/vendor/23.2.10/bitnami-redis-exporter-latest-amd64.grype.json",
+                "arm64": "./redis/scans/vendor/23.2.10/bitnami-redis-exporter-latest-arm64.grype.json"
               },
               "digest": "",
               "name": "bitnami/redis-exporter:latest",
@@ -76,14 +108,14 @@
                 "linux/arm64"
               ],
               "sbom": {
-                "amd64": "./sboms/vendor/23.2.10/bitnami-redis-exporter-amd64.syft.json",
-                "arm64": "./sboms/vendor/23.2.10/bitnami-redis-exporter-arm64.syft.json"
+                "amd64": "./redis/sboms/vendor/23.2.10/bitnami-redis-exporter-latest-amd64.syft.json",
+                "arm64": "./redis/sboms/vendor/23.2.10/bitnami-redis-exporter-latest-arm64.syft.json"
               }
             },
             {
               "cves": {
-                "amd64": "./scans/vendor/23.2.10/bitnami-kubectl-amd64.grype.json",
-                "arm64": "./scans/vendor/23.2.10/bitnami-kubectl-arm64.grype.json"
+                "amd64": "./redis/scans/vendor/23.2.10/bitnami-kubectl-latest-amd64.grype.json",
+                "arm64": "./redis/scans/vendor/23.2.10/bitnami-kubectl-latest-arm64.grype.json"
               },
               "digest": "",
               "name": "bitnami/kubectl:latest",
@@ -92,15 +124,16 @@
                 "linux/amd64"
               ],
               "sbom": {
-                "amd64": "./sboms/vendor/23.2.10/bitnami-kubectl-amd64.syft.json",
-                "arm64": "./sboms/vendor/23.2.10/bitnami-kubectl-arm64.syft.json"
+                "amd64": "./redis/sboms/vendor/23.2.10/bitnami-kubectl-latest-amd64.syft.json",
+                "arm64": "./redis/sboms/vendor/23.2.10/bitnami-kubectl-latest-arm64.syft.json"
               }
             }
           ],
           "released": "2025-11-07T00:26:47-05:00",
           "version": "23.2.10",
           "zarfPackage": {
-            "registry": "oci://ghcr.io/d0s-dev/apps/redis",
+            "built": "2025-11-09T00:51:11-05:00",
+            "registry": "oci://ghcr.io/d0s-dev/apps/redis:23.2.10",
             "tag": "23.2.10"
           }
         }

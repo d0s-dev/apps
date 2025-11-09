@@ -1,23 +1,22 @@
+components:
+    - charts:
+        - name: redis
+          namespace: default
+          url: oci://ghcr.io/d0s-dev/apps/helm/redis
+          valuesFiles:
+            - values.yaml
+          version: 23.2.11
+      description: redis application
+      images:
+        - bitnami/redis-exporter:latest
+        - bitnami/os-shell:latest
+        - bitnami/redis:latest
+        - bitnami/redis-sentinel:latest
+        - bitnami/kubectl:latest
+      name: redis-chart
+      required: true
 kind: ZarfPackageConfig
 metadata:
-  name: redis
-  description: redis Helm chart
-  version: "23.2.10"
-
-components:
-  - name: redis-chart
-    description: redis application
-    required: true
-    charts:
-      - name: redis
-        version: "23.2.10"
-        url: oci://ghcr.io/d0s-dev/apps/helm/redis
-        namespace: default
-        valuesFiles:
-          - values.yaml
-    images:
-      - "bitnami/redis-sentinel:latest"
-      - "bitnami/os-shell:latest"
-      - "bitnami/redis-exporter:latest"
-      - "bitnami/redis:latest"
-      - "bitnami/kubectl:latest"
+    description: redis Helm chart
+    name: redis
+    version: 23.2.11
