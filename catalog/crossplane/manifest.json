@@ -3,6 +3,7 @@
   "description": "Crossplane is an open source Kubernetes add-on that enables platform teams to assemble infrastructure from multiple vendors, and expose higher level self-service APIs for application teams to consume.",
   "homepage": "https://crossplane.io",
   "id": "crossplane",
+  "lastScanned": "2025-11-10T05:33:29.812Z",
   "name": "crossplane",
   "providers": {
     "vendor": {
@@ -18,7 +19,7 @@
           "images": [
             {
               "cves": {
-                "amd64": "./scans/vendor/2.1.0/xpkg.crossplane.io-crossplane-crossplane-amd64.grype.json",
+                "amd64": "./crossplane/scans/vendor/2.1.0/xpkg.crossplane.io-crossplane-crossplane-v2.1.0-amd64.grype.json",
                 "arm": "./crossplane/scans/vendor/2.1.0/xpkg.crossplane.io-crossplane-crossplane-v2.1.0-arm.grype.json",
                 "arm64": "./crossplane/scans/vendor/2.1.0/xpkg.crossplane.io-crossplane-crossplane-v2.1.0-arm64.grype.json",
                 "ppc64le": "./crossplane/scans/vendor/2.1.0/xpkg.crossplane.io-crossplane-crossplane-v2.1.0-ppc64le.grype.json"
@@ -26,13 +27,13 @@
               "digest": "",
               "name": "xpkg.crossplane.io/crossplane/crossplane:v2.1.0",
               "platforms": [
+                "linux/arm64",
                 "linux/ppc64le",
                 "linux/arm",
-                "linux/amd64",
-                "linux/arm64"
+                "linux/amd64"
               ],
               "sbom": {
-                "amd64": "./sboms/vendor/2.1.0/xpkg.crossplane.io-crossplane-crossplane-amd64.syft.json",
+                "amd64": "./crossplane/sboms/vendor/2.1.0/xpkg.crossplane.io-crossplane-crossplane-v2.1.0-amd64.syft.json",
                 "arm": "./crossplane/sboms/vendor/2.1.0/xpkg.crossplane.io-crossplane-crossplane-v2.1.0-arm.syft.json",
                 "arm64": "./crossplane/sboms/vendor/2.1.0/xpkg.crossplane.io-crossplane-crossplane-v2.1.0-arm64.syft.json",
                 "ppc64le": "./crossplane/sboms/vendor/2.1.0/xpkg.crossplane.io-crossplane-crossplane-v2.1.0-ppc64le.syft.json"

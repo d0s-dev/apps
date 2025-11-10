@@ -12,8 +12,8 @@
           "aggregates": {
             "critical": 0,
             "high": 0,
-            "low": 0,
-            "medium": 0
+            "medium": 0,
+            "low": 0
           },
           "images": [
             {
@@ -81,5 +81,6 @@
       "name": "postgresql",
       "repo": "https://charts.bitnami.com/bitnami"
     }
-  }
+  },
+  "lastScanned": "2025-11-10T05:33:29.826Z"
 }

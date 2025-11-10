@@ -1,7 +1,28 @@
 {
   "version": "1.0.0",
-  "lastUpdated": "2025-11-08T06:35:06.905Z",
+  "lastUpdated": "2025-11-10T05:33:29.840Z",
   "apps": [
+    {
+      "id": "crossplane",
+      "name": "crossplane",
+      "providers": [
+        "vendor"
+      ],
+      "hasIronBank": false,
+      "hasChainguard": false,
+      "imageCount": 1,
+      "cves": {
+        "critical": 0,
+        "high": 0,
+        "medium": 0,
+        "low": 0
+      },
+      "latestVersion": "2.1.0",
+      "zarfPackage": "catalog/crossplane/zarf/zarf.yaml",
+      "links": {
+        "helm": "https://charts.crossplane.io/stable"
+      }
+    },
     {
       "id": "grafana",
       "name": "Grafana",
@@ -128,64 +149,44 @@
     },
     {
       "id": "postgresql",
-      "name": "PostgreSQL",
-      "summary": "Advanced open-source relational database",
-      "labels": [
-        "database",
-        "sql",
-        "storage"
-      ],
+      "name": "postgresql",
       "providers": [
-        "vendor",
-        "ironbank"
+        "vendor"
       ],
-      "hasIronBank": true,
+      "hasIronBank": false,
       "hasChainguard": false,
-      "imageCount": 2,
+      "imageCount": 3,
       "cves": {
         "critical": 0,
         "high": 0,
         "medium": 0,
         "low": 0
       },
-      "latestVersion": "15.3",
+      "latestVersion": "18.1.4",
       "zarfPackage": "catalog/postgresql/zarf/zarf.yaml",
       "links": {
-        "helm": "https://charts.bitnami.com/bitnami",
-        "documentation": "https://github.com/bitnami/charts/tree/main/bitnami/postgresql",
-        "git": "https://github.com/postgres/postgres",
-        "website": "https://www.postgresql.org/"
+        "helm": "https://charts.bitnami.com/bitnami"
       }
     },
     {
       "id": "redis",
-      "name": "Redis",
-      "summary": "In-memory data structure store",
-      "labels": [
-        "database",
-        "cache",
-        "nosql"
-      ],
+      "name": "redis",
       "providers": [
-        "vendor",
-        "chainguard"
+        "vendor"
       ],
       "hasIronBank": false,
-      "hasChainguard": true,
-      "imageCount": 2,
+      "hasChainguard": false,
+      "imageCount": 10,
       "cves": {
         "critical": 0,
         "high": 0,
         "medium": 0,
         "low": 0
       },
-      "latestVersion": "7.2.0",
+      "latestVersion": "23.2.12",
       "zarfPackage": "catalog/redis/zarf/zarf.yaml",
       "links": {
-        "helm": "https://charts.bitnami.com/bitnami",
-        "documentation": "https://github.com/bitnami/charts/tree/main/bitnami/redis",
-        "git": "https://github.com/redis/redis",
-        "website": "https://redis.io/"
+        "helm": "https://charts.bitnami.com/bitnami"
       }
     }
   ]

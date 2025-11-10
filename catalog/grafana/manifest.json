@@ -30,10 +30,10 @@
             "tag": "10.2.0"
           },
           "aggregates": {
-            "critical": 1,
-            "high": 3,
-            "medium": 10,
-            "low": 20
+            "critical": 0,
+            "high": 0,
+            "medium": 0,
+            "low": 0
           },
           "images": [
             {
@@ -101,5 +101,5 @@
       ]
     }
   },
-  "lastScanned": "2025-10-30T03:31:33.349Z"
+  "lastScanned": "2025-11-10T05:33:29.821Z"
 }

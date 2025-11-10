@@ -18,7 +18,7 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "name", "summary", "labels", "providers", "imageCount", "cves", "latestVersion"],
+        "required": ["id", "name", "providers", "imageCount", "cves", "latestVersion"],
         "properties": {
           "id": {
             "type": "string",
