@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "App Manifest Schema",
   "type": "object",
-  "required": ["id", "name", "summary", "description", "upstream", "labels", "providers", "lastScanned"],
+  "required": ["id", "name", "description", "upstream", "providers"],
   "properties": {
     "id": {
       "type": "string",
@@ -39,11 +39,20 @@
         "website": {"type": "string", "format": "uri"}
       }
     },
+    "category": {
+      "type": "string",
+      "description": "Primary category for the app"
+    },
     "labels": {
       "type": "array",
       "items": {"type": "string"},
       "uniqueItems": true,
       "description": "Categories and tags for filtering"
+    },
+    "homepage": {
+      "type": "string",
+      "format": "uri",
+      "description": "Homepage URL"
     },
     "providers": {
       "type": "object",
@@ -85,10 +94,10 @@
                     "type": "array",
                     "items": {
                       "type": "object",
-                      "required": ["name", "digest", "size", "role", "sbom", "cves"],
+                      "required": ["name"],
                       "properties": {
                         "name": {"type": "string"},
-                        "digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+                        "digest": {"type": "string"},
                         "size": {"type": "string"},
                         "role": {"type": "string", "enum": ["runtime", "sidecar", "init"]},
                         "platforms": {
@@ -96,8 +105,18 @@
                           "items": {"type": "string"}
                         },
                         "baseImage": {"type": "string"},
-                        "sbom": {"type": "string"},
-                        "cves": {"type": "string"}
+                        "sbom": {
+                          "oneOf": [
+                            {"type": "string"},
+                            {"type": "object", "additionalProperties": {"type": "string"}}
+                          ]
+                        },
+                        "cves": {
+                          "oneOf": [
+                            {"type": "string"},
+                            {"type": "object", "additionalProperties": {"type": "string"}}
+                          ]
+                        }
                       }
                     }
                   }

@@ -40,14 +40,15 @@ function parseGrypeScan(scanPath) {
     const scanData = JSON.parse(fs.readFileSync(scanPath, 'utf8'));
     const counts = { critical: 0, high: 0, medium: 0, low: 0 };
 
-    if (scanData.vulnerabilities) {
-      scanData.vulnerabilities.forEach(vuln => {
-        const severity = vuln.vulnerability?.severity?.toLowerCase() || 'unknown';
-        if (counts.hasOwnProperty(severity)) {
-          counts[severity]++;
-        }
-      });
-    }
+    // Support both formats: grype CLI output (vulnerabilities) and d0s output (matches)
+    const vulns = scanData.matches || scanData.vulnerabilities || [];
+    
+    vulns.forEach(vuln => {
+      const severity = vuln.vulnerability?.severity?.toLowerCase() || 'unknown';
+      if (counts.hasOwnProperty(severity)) {
+        counts[severity]++;
+      }
+    });
 
     return counts;
   } catch (error) {
@@ -64,13 +65,20 @@ function aggregateCVEs(images, basePath) {
 
   images.forEach(image => {
     if (image.cves) {
-      const scanPath = path.join(basePath, image.cves);
-      const imageCVEs = parseGrypeScan(scanPath);
+      // Handle both string (single arch) and object (multi-arch) formats
+      const cvePaths = typeof image.cves === 'string' 
+        ? [image.cves] 
+        : Object.values(image.cves);
       
-      total.critical += imageCVEs.critical;
-      total.high += imageCVEs.high;
-      total.medium += imageCVEs.medium;
-      total.low += imageCVEs.low;
+      cvePaths.forEach(cvePath => {
+        const scanPath = path.join(basePath, cvePath);
+        const imageCVEs = parseGrypeScan(scanPath);
+        
+        total.critical += imageCVEs.critical;
+        total.high += imageCVEs.high;
+        total.medium += imageCVEs.medium;
+        total.low += imageCVEs.low;
+      });
     }
   });
 

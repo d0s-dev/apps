@@ -67,7 +67,7 @@
               "sbom": {}
             }
           ],
-          "released": "TBD",
+          "released": "2025-11-09T10:57:19-05:00",
           "version": "23.2.11",
           "zarfPackage": {
             "built": "2025-11-09T10:57:19-05:00",
@@ -83,7 +83,7 @@
             "medium": 0
           },
           "images": [],
-          "released": "TBD",
+          "released": "2025-11-09T10:53:05-05:00",
           "version": "23.2.12",
           "zarfPackage": {
             "built": "2025-11-09T10:53:05-05:00",

@@ -11,14 +11,14 @@
         {
           "aggregates": {
             "critical": 0,
-            "high": 20,
+            "high": 0,
             "low": 0,
-            "medium": 28
+            "medium": 0
           },
           "images": [
             {
               "cves": {
-                "amd64": "./crossplane/scans/vendor/2.1.0/xpkg.crossplane.io-crossplane-crossplane-v2.1.0-amd64.grype.json",
+                "amd64": "./scans/vendor/2.1.0/xpkg.crossplane.io-crossplane-crossplane-amd64.grype.json",
                 "arm": "./crossplane/scans/vendor/2.1.0/xpkg.crossplane.io-crossplane-crossplane-v2.1.0-arm.grype.json",
                 "arm64": "./crossplane/scans/vendor/2.1.0/xpkg.crossplane.io-crossplane-crossplane-v2.1.0-arm64.grype.json",
                 "ppc64le": "./crossplane/scans/vendor/2.1.0/xpkg.crossplane.io-crossplane-crossplane-v2.1.0-ppc64le.grype.json"
@@ -26,24 +26,24 @@
               "digest": "",
               "name": "xpkg.crossplane.io/crossplane/crossplane:v2.1.0",
               "platforms": [
-                "linux/arm64",
                 "linux/ppc64le",
                 "linux/arm",
-                "linux/amd64"
+                "linux/amd64",
+                "linux/arm64"
               ],
               "sbom": {
-                "amd64": "./crossplane/sboms/vendor/2.1.0/xpkg.crossplane.io-crossplane-crossplane-v2.1.0-amd64.syft.json",
+                "amd64": "./sboms/vendor/2.1.0/xpkg.crossplane.io-crossplane-crossplane-amd64.syft.json",
                 "arm": "./crossplane/sboms/vendor/2.1.0/xpkg.crossplane.io-crossplane-crossplane-v2.1.0-arm.syft.json",
                 "arm64": "./crossplane/sboms/vendor/2.1.0/xpkg.crossplane.io-crossplane-crossplane-v2.1.0-arm64.syft.json",
                 "ppc64le": "./crossplane/sboms/vendor/2.1.0/xpkg.crossplane.io-crossplane-crossplane-v2.1.0-ppc64le.syft.json"
               }
             }
           ],
-          "released": "2025-11-09T14:29:05-05:00",
+          "released": "2025-11-10T00:03:44-05:00",
           "version": "2.1.0",
           "zarfPackage": {
-            "built": "2025-11-09T14:37:18-05:00",
-            "registry": "oci://ghcr.io/d0s-dev/apps/crossplane:2.1.0",
+            "built": "2025-11-10T00:08:35-05:00",
+            "registry": "oci://ghcr.io/d0s-dev/apps/crossplane",
             "tag": "2.1.0"
           }
         }
