@@ -46,7 +46,7 @@ jobs:
       - name: Build and install d0s CLI
         run: |
           cd d0s-repo
-          make build-cli
+          go build -o d0s
           sudo mv d0s /usr/local/bin/d0s
           d0s version
       
