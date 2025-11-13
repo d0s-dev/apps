@@ -57,12 +57,11 @@ jobs:
         run: |
           cd catalog
           
-          # Run the scan-catalog internal command with --force to rescan even if CVE data exists
+          # Run the scan-catalog internal command
           d0s internal scan-catalog \
             --catalog-path . \
             --parallel 4 \
             --output json \
-            --force \
             2>&1 | tee scan-output.json
           
           # Extract summary
