@@ -30,6 +30,14 @@ jobs:
           fetch-depth: 0
           ref: main
       
+      - name: Ensure Git is installed
+        run: |
+          if ! command -v git &> /dev/null; then
+            echo "Git not found, installing..."
+            sudo dnf install -y git || yum install -y git || apt-get update && apt-get install -y git
+          fi
+          git --version
+      
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
@@ -57,11 +65,12 @@ jobs:
         run: |
           cd catalog
           
-          # Run the scan-catalog internal command
+          # Run the scan-catalog internal command with --force to rescan even if CVE data exists
           d0s internal scan-catalog \
             --catalog-path . \
             --parallel 4 \
             --output json \
+            --force \
             2>&1 | tee scan-output.json
           
           # Extract summary
