@@ -21,7 +21,7 @@ env:
 jobs:
   scan-catalog:
     name: Scan Entire Catalog
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64]
     
     steps:
       - name: Checkout apps repository
@@ -163,7 +163,7 @@ jobs:
             d0s internal notify \
               --webhook-url "${{ secrets.DISCORD_WEBHOOK_URL }}" \
               --type auto \
-              --input scan-output.json \
+              --file scan-output.json \
               --verbose || echo "Notification failed, continuing..."
           else
             echo "No scan output to send notification"
@@ -176,70 +176,3 @@ jobs:
           name: scan-results
           path: catalog/scan-output.json
           retention-days: 7
-
-  # Optional: Individual app scans (can be used for testing or selective scanning)
-  scan-app:
-    name: Scan Individual App
-    runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch'
-    strategy:
-      fail-fast: false
-      matrix:
-        app:
-          - nginx
-          - postgresql
-          - redis
-    
-    steps:
-      - name: Checkout apps repository
-        uses: actions/checkout@v4
-        with:
-          ref: main
-      
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.23'
-      
-      - name: Checkout d0s CLI repository
-        uses: actions/checkout@v4
-        with:
-          repository: d0s-dev/d0s
-          ref: alpha-release
-          path: d0s-repo
-          token: ${{ secrets.GH_PAT }}
-      
-      - name: Build and install d0s CLI
-        run: |
-          cd d0s-repo
-          make build-cli
-          sudo mv d0s /usr/local/bin/d0s
-          d0s version
-      
-      - name: Scan app
-        run: |
-          cd catalog
-          
-          d0s internal scan-app \
-            --app ${{ matrix.app }} \
-            --catalog-path . \
-            --parallel 2 \
-            --output json \
-            --verbose
-      
-      - name: Show results
-        if: always()
-        run: |
-          echo "## 📦 App Scan: ${{ matrix.app }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          
-          if [ -f "catalog/${{ matrix.app }}/manifest.json" ]; then
-            VERSION=$(jq -r '.providers.vendor.versions[0].version' catalog/${{ matrix.app }}/manifest.json)
-            CRITICAL=$(jq -r '.providers.vendor.versions[0].aggregates.critical // 0' catalog/${{ matrix.app }}/manifest.json)
-            HIGH=$(jq -r '.providers.vendor.versions[0].aggregates.high // 0' catalog/${{ matrix.app }}/manifest.json)
-            MEDIUM=$(jq -r '.providers.vendor.versions[0].aggregates.medium // 0' catalog/${{ matrix.app }}/manifest.json)
-            LOW=$(jq -r '.providers.vendor.versions[0].aggregates.low // 0' catalog/${{ matrix.app }}/manifest.json)
-            
-            echo "**Version:** $VERSION" >> $GITHUB_STEP_SUMMARY
-            echo "**CVEs:** 🔴 $CRITICAL Critical | 🟡 $HIGH High | 🟠 $MEDIUM Medium | ⚪ $LOW Low" >> $GITHUB_STEP_SUMMARY
-          fi
