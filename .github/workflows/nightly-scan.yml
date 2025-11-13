@@ -57,18 +57,23 @@ jobs:
         run: |
           cd catalog
           
-          # Run the scan-catalog internal command
+          # Run the scan-catalog internal command (output only JSON to file)
           d0s internal scan-catalog \
             --catalog-path . \
             --parallel 4 \
-            --output json \
-            2>&1 | tee scan-output.json
+            --output json > scan-output.json 2> scan-errors.log
           
           # Extract summary
           if [ -f scan-output.json ]; then
             echo "scan-completed=true" >> $GITHUB_OUTPUT
           else
             echo "scan-completed=false" >> $GITHUB_OUTPUT
+          fi
+          
+          # Show any errors
+          if [ -s scan-errors.log ]; then
+            echo "Scan warnings/errors:"
+            cat scan-errors.log
           fi
       
       - name: Check for CVE changes
