@@ -41,6 +41,7 @@ jobs:
           repository: d0s-dev/d0s
           ref: alpha-release
           path: d0s-repo
+          token: ${{ secrets.GH_PAT }}
       
       - name: Build and install d0s CLI
         run: |
@@ -206,6 +207,7 @@ jobs:
           repository: d0s-dev/d0s
           ref: alpha-release
           path: d0s-repo
+          token: ${{ secrets.GH_PAT }}
       
       - name: Build and install d0s CLI
         run: |
