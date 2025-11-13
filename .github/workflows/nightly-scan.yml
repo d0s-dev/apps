@@ -47,8 +47,10 @@ jobs:
         run: |
           cd d0s-repo
           go build -o d0s ./cmd/d0s
-          sudo mv d0s /usr/local/bin/d0s
-          d0s version
+          mkdir -p $HOME/bin
+          mv d0s $HOME/bin/d0s
+          echo "$HOME/bin" >> $GITHUB_PATH
+          $HOME/bin/d0s version
       
       - name: Run full catalog scan
         id: scan
