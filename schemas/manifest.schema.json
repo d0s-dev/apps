@@ -1,13 +1,14 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "App Manifest Schema",
+  "description": "Schema for d0s app catalog manifest files",
   "type": "object",
-  "required": ["id", "name", "description", "upstream", "providers"],
+  "required": ["id", "name", "description", "upstream", "versions"],
   "properties": {
     "id": {
       "type": "string",
       "pattern": "^[a-z0-9-]+$",
-      "description": "Unique identifier for the app"
+      "description": "Unique identifier for the app (lowercase, alphanumeric, dashes)"
     },
     "name": {
       "type": "string",
@@ -21,23 +22,8 @@
     },
     "description": {
       "type": "string",
-      "minLength": 50,
+      "minLength": 20,
       "description": "Detailed description of the app"
-    },
-    "upstream": {
-      "type": "object",
-      "properties": {
-        "helm": {
-          "type": "object",
-          "properties": {
-            "name": {"type": "string"},
-            "repo": {"type": "string", "format": "uri"},
-            "documentation": {"type": "string", "format": "uri"}
-          }
-        },
-        "git": {"type": "string", "format": "uri"},
-        "website": {"type": "string", "format": "uri"}
-      }
     },
     "category": {
       "type": "string",
@@ -47,85 +33,125 @@
       "type": "array",
       "items": {"type": "string"},
       "uniqueItems": true,
-      "description": "Categories and tags for filtering"
+      "description": "Tags for filtering"
     },
-    "homepage": {
-      "type": "string",
-      "format": "uri",
-      "description": "Homepage URL"
-    },
-    "providers": {
+    "upstream": {
       "type": "object",
-      "patternProperties": {
-        "^[a-z0-9-]+$": {
+      "required": ["helm"],
+      "properties": {
+        "helm": {
           "type": "object",
-          "required": ["versions"],
+          "required": ["repo", "chart"],
           "properties": {
-            "support": {
+            "repo": {
               "type": "string",
-              "enum": ["community", "enterprise", "commercial"]
+              "description": "Helm repository URL"
             },
-            "notes": {"type": "string"},
-            "versions": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "required": ["version", "images"],
-                "properties": {
-                  "version": {"type": "string"},
-                  "released": {"type": "string", "format": "date-time"},
-                  "zarfPackage": {
-                    "type": "object",
-                    "properties": {
-                      "registry": {"type": "string"},
-                      "tag": {"type": "string"}
-                    }
-                  },
-                  "aggregates": {
-                    "type": "object",
-                    "properties": {
-                      "critical": {"type": "integer", "minimum": 0},
-                      "high": {"type": "integer", "minimum": 0},
-                      "medium": {"type": "integer", "minimum": 0},
-                      "low": {"type": "integer", "minimum": 0}
-                    }
-                  },
-                  "images": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "required": ["name"],
-                      "properties": {
-                        "name": {"type": "string"},
-                        "digest": {"type": "string"},
-                        "size": {"type": "string"},
-                        "role": {"type": "string", "enum": ["runtime", "sidecar", "init"]},
-                        "platforms": {
-                          "type": "array",
-                          "items": {"type": "string"}
-                        },
-                        "baseImage": {"type": "string"},
-                        "sbom": {
-                          "oneOf": [
-                            {"type": "string"},
-                            {"type": "object", "additionalProperties": {"type": "string"}}
-                          ]
-                        },
-                        "cves": {
-                          "oneOf": [
-                            {"type": "string"},
-                            {"type": "object", "additionalProperties": {"type": "string"}}
-                          ]
-                        }
-                      }
-                    }
-                  }
+            "chart": {
+              "type": "string",
+              "description": "Chart name in the repository"
+            },
+            "documentation": {
+              "type": "string",
+              "format": "uri"
+            }
+          }
+        },
+        "git": {
+          "type": "string",
+          "format": "uri"
+        },
+        "website": {
+          "type": "string",
+          "format": "uri"
+        }
+      }
+    },
+    "ociRegistry": {
+      "type": "string",
+      "pattern": "^(oci://|ghcr\\.io/)",
+      "description": "OCI registry base URL for published packages"
+    },
+    "versions": {
+      "type": "array",
+      "description": "List of app versions (newest first)",
+      "items": {
+        "type": "object",
+        "required": ["version", "chartVersion"],
+        "properties": {
+          "version": {
+            "type": "string",
+            "description": "App version (semantic version)"
+          },
+          "chartVersion": {
+            "type": "string",
+            "description": "Helm chart version"
+          },
+          "appVersion": {
+            "type": "string",
+            "description": "Application version (from chart's appVersion)"
+          },
+          "released": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ociPackage": {
+            "type": "object",
+            "description": "OCI package locations per architecture",
+            "properties": {
+              "amd64": {"type": "string"},
+              "arm64": {"type": "string"}
+            }
+          },
+          "images": {
+            "type": "array",
+            "description": "Container images for this version",
+            "items": {
+              "type": "object",
+              "required": ["name"],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Full image reference (registry/repo:tag@digest)"
+                },
+                "digest": {
+                  "type": "string",
+                  "pattern": "^sha256:[a-f0-9]{64}$"
+                },
+                "platforms": {
+                  "type": "array",
+                  "items": {"type": "string"}
                 }
               }
             }
+          },
+          "aggregates": {
+            "type": "object",
+            "description": "CVE counts by severity",
+            "properties": {
+              "critical": {"type": "integer", "minimum": 0},
+              "high": {"type": "integer", "minimum": 0},
+              "medium": {"type": "integer", "minimum": 0},
+              "low": {"type": "integer", "minimum": 0}
+            }
+          },
+          "builtAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when this version was last built/packaged"
+          },
+          "scannedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when this version was last scanned for CVEs"
           }
         }
       }
+    },
+    "lastUpdated": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp of last manifest update"
     },
     "lastScanned": {
       "type": "string",

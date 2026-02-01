@@ -1,333 +1,199 @@
 # GitHub Actions Workflows
 
-This directory contains automated workflows for managing the D0S catalog.
+This directory contains automated workflows for managing the d0s catalog.
+
+## Workflow Overview
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                     NIGHTLY PIPELINE (2 AM UTC)                          │
+│                                                                          │
+│  ┌──────────┐    ┌───────────┐    ┌──────────┐    ┌──────────────────┐  │
+│  │ Discover │ -> │  Update   │ -> │  Build   │ -> │ Commit & Refresh │  │
+│  │   Apps   │    │ Versions  │    │ Packages │    │    Catalog       │  │
+│  └──────────┘    └───────────┘    └──────────┘    └────────┬─────────┘  │
+│                                                             │            │
+│                                    ┌────────────────────────┘            │
+│                                    v                                     │
+│                           ┌────────────────┐                            │
+│                           │ Discord Notify │                            │
+│                           └───────┬────────┘                            │
+│                                   │                                      │
+└───────────────────────────────────┼──────────────────────────────────────┘
+                                    v
+                    ┌───────────────────────────────┐
+                    │   repository_dispatch to      │
+                    │   d0s-dev/site                │
+                    └───────────────┬───────────────┘
+                                    v
+                    ┌───────────────────────────────┐
+                    │   Site Rebuild (GitHub Pages) │
+                    └───────────────────────────────┘
+```
 
 ## Workflows
 
-### 🔨 `nightly-builds.yml`
+### 🌙 `nightly-pipeline.yml` (Main Pipeline)
+
 **Schedule:** Daily at 2 AM UTC
 
-Updates apps to latest versions and builds Zarf packages.
+The primary automation workflow that updates, builds, and scans all catalog apps.
 
-**Actions:**
-- Checks for new upstream chart versions
-- Updates `manifest.json` with new versions
-- Scans images for CVEs
-- Builds and pushes Zarf packages to OCI registry
-- Commits changes to catalog
+**Jobs:**
+1. **Discover** - Dynamically finds all apps in `catalog/*/manifest.json`
+2. **Update** - Checks upstream Helm repos for new versions (N+3 strategy)
+3. **Build** - Parallel builds using matrix strategy (max 3 concurrent)
+   - Generates `zarf.yaml` for each version
+   - Builds Zarf packages with SBOMs
+   - Runs CVE scans using Grype
+   - Writes `builtAt` and `scannedAt` timestamps
+4. **Commit** - Aggregates changes and commits to main
+5. **Notify** - Sends Discord summary
+6. **Trigger Site** - Dispatches event to rebuild d0s.dev
 
-**Trigger:** 
-- Scheduled (nightly)
-- Manual dispatch
+**Features:**
+- ✅ Dynamic app discovery (no hardcoded list)
+- ✅ Self-hosted runners for faster builds
+- ✅ `fail-fast: false` - failures don't stop other apps
+- ✅ Timestamps on all builds and scans
+- ✅ Discord notifications with CVE summary
+- ✅ Automatic site rebuild trigger
+
+**Triggers:**
+- Scheduled (nightly at 2 AM UTC)
+- Manual dispatch with options:
+  - `apps` - Comma-separated list or "all"
+  - `skip_build` - Scan only, no builds
+  - `versions_to_build` - Override N+3 default
 
 ---
 
-### 🔍 `nightly-scan.yml`
-**Schedule:** Daily at 3 AM UTC (after builds)
+### 🔍 `nightly-scan.yml` (Standalone Scans)
 
-Scans the entire catalog for CVE updates using the latest vulnerability database.
+**Schedule:** Daily at 4 AM UTC (or triggered after nightly-pipeline)
 
-**Actions:**
-- Runs `d0s internal scan-catalog` on all apps
-- Updates CVE counts in `manifest.json` and `grype.json` files
-- Calculates CVE deltas (new/resolved vulnerabilities)
-- Sends Discord notifications with summary
-- Commits CVE database updates
+Additional CVE scanning that can run independently or as a follow-up.
 
-**Trigger:**
-- Scheduled (nightly)
-- Manual dispatch
+**Jobs:**
+1. **Scan Catalog** - Runs Grype scans on all SBOMs
+2. **Notify** - Discord notification with CVE totals
+3. **Trigger Site** - Dispatches site rebuild if changes detected
 
-**Environment Variables:**
-- `DISCORD_WEBHOOK_URL` (secret) - Optional Discord webhook for notifications
+**Triggers:**
+- `workflow_run` - After nightly-pipeline completes successfully
+- Scheduled (daily at 4 AM UTC)
+- Manual dispatch with options:
+  - `scan_all_versions` - Scan all versions, not just latest 3
+  - `send_notification` - Enable/disable Discord
 
 ---
 
 ### 📝 `refresh-catalog.yml`
-**Schedule:** Manual trigger only
 
-Refreshes the catalog index from all app manifests.
+**Schedule:** Daily at 6 AM UTC (backup) + on push to manifest files
+
+Regenerates `apps.json` and `cves.json` from all manifests.
+
+**Actions:**
+- Validates all manifests against schema
+- Runs `d0s catalog refresh`
+- Commits updated catalog index
+
+**Triggers:**
+- Scheduled (daily at 6 AM UTC)
+- Push to `catalog/*/manifest.json`
+- Manual dispatch
 
 ---
 
 ### ➕ `add-new-app.yml`
-**Schedule:** Manual trigger only
 
-Scaffolds a new app in the catalog.
+**Manual trigger only**
+
+Scaffolds a new app from a Helm chart and creates a PR.
+
+**Inputs:**
+- `chart_name` - Helm chart name (e.g., `redis`, `ingress-nginx`)
+- `chart_repo` - Helm repository URL
+- `chart_version` - Optional specific version
+
+**Actions:**
+1. Runs `d0s catalog add` to scaffold app
+2. Generates `zarf.yaml` for latest 3 versions
+3. Runs initial CVE scan
+4. Creates PR with scan results summary
 
 ---
 
 ### 🔧 `manual-build.yml`
-**Schedule:** Manual trigger only
 
-Builds a specific app on demand.
+**Manual trigger only**
 
----
+Build specific apps on-demand outside of nightly schedule.
 
-## D0S Internal Commands Used
-
-The workflows use d0s internal commands for automation:
-
-### `d0s internal scan-version`
-Scans a specific app/provider/version for CVEs.
-
-```bash
-d0s internal scan-version \
-  --app nginx \
-  --provider docker \
-  --version 1.21.0 \
-  --catalog-path ./catalog
-```
-
-### `d0s internal scan-app`
-Scans all versions of a single app.
-
-```bash
-d0s internal scan-app \
-  --app nginx \
-  --catalog-path ./catalog \
-  --parallel 2 \
-  --output json
-```
-
-### `d0s internal scan-catalog`
-Scans the entire catalog in parallel.
-
-```bash
-d0s internal scan-catalog \
-  --catalog-path ./catalog \
-  --parallel 4 \
-  --output json
-```
-
-### `d0s internal notify`
-Sends notifications to Discord (or other webhooks).
-
-```bash
-d0s internal notify \
-  --webhook-url "$DISCORD_WEBHOOK_URL" \
-  --type catalog \
-  --input scan-results.json
-```
-
-Auto-detection also works:
-```bash
-cat scan-results.json | d0s internal notify --webhook-url "$DISCORD_WEBHOOK_URL" --type auto
-```
+**Inputs:**
+- `app` - App name to build
+- `version` - Optional specific version
+- `arch` - Architecture (amd64, arm64, or both)
 
 ---
 
-## Workflow Sequence
+## Required Secrets
 
-```mermaid
-graph TD
-    A[2 AM UTC: nightly-builds.yml] -->|Check for updates| B[Update to latest versions]
-    B -->|New version?| C[Build Zarf package]
-    C -->|Always| D[Scan for CVEs]
-    D -->|Commit changes| E[Push to main]
-    
-    E -->|1 hour later| F[3 AM UTC: nightly-scan.yml]
-    F -->|Scan all apps| G[Update CVE database]
-    G -->|CVE changes?| H[Calculate deltas]
-    H -->|Commit updates| I[Push to main]
-    I -->|If configured| J[Send Discord notification]
-```
+| Secret | Description |
+|--------|-------------|
+| `GITHUB_TOKEN` | Auto-provided for repo actions |
+| `GH_PAT` | Personal access token for cross-repo dispatch |
+| `DISCORD_WEBHOOK_URL` | Discord webhook for notifications |
 
----
+## Required Runners
 
-## Setup Instructions
-
-### 1. Install d0s CLI (in workflow)
-
-The workflows automatically build and install d0s:
+The build workflows use self-hosted runners for performance:
 
 ```yaml
-- name: Checkout d0s CLI repository
-  uses: actions/checkout@v4
-  with:
-    repository: d0s-dev/d0s
-    ref: alpha-release
-    path: d0s-repo
-
-- name: Build and install d0s CLI
-  run: |
-    cd d0s-repo
-    make build-cli
-    sudo mv d0s /usr/local/bin/d0s
-    d0s version
+runs-on: [self-hosted, Linux, X64]
 ```
 
-### 2. Configure Discord Notifications (Optional)
+Ensure at least 3 runners are available for parallel matrix builds.
 
-1. Create a Discord webhook in your server:
-   - Server Settings → Integrations → Webhooks → New Webhook
-   - Copy the webhook URL
+## d0s CLI Commands Used
 
-2. Add to GitHub repository secrets:
-   - Settings → Secrets and variables → Actions → New repository secret
-   - Name: `DISCORD_WEBHOOK_URL`
-   - Value: `https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_TOKEN`
+| Command | Description |
+|---------|-------------|
+| `d0s catalog update --all` | Check for new upstream versions |
+| `d0s catalog add` | Scaffold new app from Helm chart |
+| `d0s package generate` | Generate `zarf.yaml` from template |
+| `d0s catalog build-all` | Build packages with SBOMs |
+| `d0s catalog scan` | Run Grype CVE scans |
+| `d0s catalog refresh` | Regenerate `apps.json` |
+| `d0s catalog cve-db` | Generate central `cves.json` |
+| `d0s internal scan-catalog` | Batch scan entire catalog |
+| `d0s internal notify` | Send Discord notifications |
 
-### 3. Configure Repository Permissions
+## Timestamps
 
-Ensure the workflow has write permissions:
-- Settings → Actions → General → Workflow permissions
-- Select "Read and write permissions"
-- Enable "Allow GitHub Actions to create and approve pull requests" (optional)
-
----
-
-## Testing Workflows
-
-### Test Full Catalog Scan
-
-```bash
-# Trigger manually
-gh workflow run nightly-scan.yml
-```
-
-### Test Single App Scan
-
-```bash
-# Scan a specific app
-gh workflow run nightly-scan.yml -f send_notification=false
-```
-
-### View Workflow Results
-
-```bash
-# List recent runs
-gh run list --workflow=nightly-scan.yml --limit 5
-
-# View details
-gh run view <run-id>
-
-# View logs
-gh run view <run-id> --log
-```
-
----
-
-## Output Structure
-
-### Scan Output JSON
-
-The `scan-catalog` command produces JSON like:
+All builds and scans write ISO 8601 timestamps:
 
 ```json
 {
-  "total_apps": 6,
-  "successful_scans": 5,
-  "failed_scans": 1,
-  "skipped_scans": 0,
-  "duration": "5m30s",
-  "total_cve_delta": {
-    "before": { "critical": 5, "high": 10, "medium": 20, "low": 30 },
-    "after": { "critical": 6, "high": 9, "medium": 21, "low": 29 },
-    "new": { "critical": 1, "high": 0, "medium": 1, "low": 0 },
-    "resolved": { "critical": 0, "high": 1, "medium": 0, "low": 1 },
-    "changed": true
-  },
-  "app_results": [
-    {
-      "app": "nginx",
-      "status": "success",
-      "versions_scanned": 3,
-      "successful": 3,
-      "failed": 0,
-      "skipped": 0,
-      "cve_delta": { ... }
+  "versions": [{
+    "version": "1.2.3",
+    "builtAt": "2026-01-31T02:15:30Z",
+    "scannedAt": "2026-01-31T02:16:45Z",
+    "aggregates": {
+      "critical": 0,
+      "high": 2,
+      "medium": 5,
+      "low": 10
     }
-  ]
+  }]
 }
 ```
 
-### Discord Notification
+These timestamps are displayed on the d0s.dev catalog pages.
 
-The notification includes:
-- 📊 Scan summary with app counts
-- ✅/❌ Success/failure statistics
-- 🔍 CVE delta breakdown (new vs resolved)
-- 🔴🟡🟠⚪ Color-coded severity indicators
-- 📈 Current total CVE counts
-- ⏱️ Scan duration
+## Version Retention
 
----
-
-## Troubleshooting
-
-### Workflow fails with "d0s: command not found"
-
-The d0s CLI build step failed. Check:
-- Go version is 1.23+
-- d0s repository is accessible
-- Build succeeded without errors
-
-### No Discord notifications
-
-Check:
-- `DISCORD_WEBHOOK_URL` secret is set correctly
-- Webhook URL is valid and active
-- Workflow has `send_notification: true` (default for scheduled runs)
-
-### CVE data not updating
-
-Check:
-- SBOM files exist in version directories
-- Grype database can be downloaded (network access)
-- Previous grype.json files are being backed up correctly
-
-### Permission denied when committing
-
-Check:
-- Workflow has write permissions enabled
-- `GITHUB_TOKEN` has proper scopes
-- No branch protection rules blocking automated commits
-
----
-
-## Maintenance
-
-### Update d0s CLI Version
-
-The workflows use the `alpha-release` branch by default. To update:
-
-```yaml
-- name: Checkout d0s CLI repository
-  uses: actions/checkout@v4
-  with:
-    repository: d0s-dev/d0s
-    ref: main  # or specific version tag
-    path: d0s-repo
-```
-
-### Adjust Scan Parallelism
-
-For faster scans on larger catalogs:
-
-```yaml
-d0s internal scan-catalog \
-  --catalog-path . \
-  --parallel 8  # increase based on available resources
-```
-
-### Change Scan Schedule
-
-Edit the cron expression:
-
-```yaml
-schedule:
-  - cron: '0 3 * * *'  # 3 AM UTC daily
-  # - cron: '0 3 * * 0'  # 3 AM UTC on Sundays only
-  # - cron: '0 */6 * * *'  # Every 6 hours
-```
-
----
-
-## Next Steps
-
-- [ ] Add support for scanning specific providers (not just vendor)
-- [ ] Implement CVE threshold checks (fail on critical CVEs)
-- [ ] Add Slack/Teams notification support
-- [ ] Create weekly summary reports
-- [ ] Add metrics tracking over time
+- **N+3 Strategy**: Latest 3 versions are built nightly
+- **All versions preserved**: Older version scan data is kept
+- **No automatic cleanup**: Historical data for trend analysis

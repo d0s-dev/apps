@@ -1,0 +1,22 @@
+kind: ZarfPackageConfig
+metadata:
+  name: {{ .ID }}
+  description: "{{ .Description }}"
+  version: "{{ .Version }}"
+  url: "https://github.com/d0s-dev/apps"
+
+components:
+  - name: {{ .ID }}
+    required: true
+    description: "Deploy {{ .Name }}"
+    charts:
+      - name: redis
+        version: "{{ .ChartVersion }}"
+        namespace: {{ .ID }}
+        url: https://charts.bitnami.com/bitnami
+        valuesFiles:
+          - ../../values.yaml
+    images:
+{{- range .Images }}
+      - "{{ . }}"
+{{- end }}

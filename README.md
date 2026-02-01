@@ -31,8 +31,6 @@ apps/
 ├── schemas/                         # JSON schemas for validation
 │   ├── catalog.schema.json
 │   └── manifest.schema.json
-├── catalog.js                       # Catalog management script
-├── package.json                     # Node.js dependencies
 ├── CONTRIBUTING.md                  # Guide for adding new apps
 └── WEBSITE_INTEGRATION.md          # Guide for website updates
 ```
@@ -53,9 +51,9 @@ apps/
 ## Quick Start
 
 ### Prerequisites
-- Node.js 16+
-- Docker (for generating SBOMs/scans)
-- Zarf CLI (for package management)
+- **d0s CLI** (catalog management, building, scanning)
+- Docker (for building Zarf packages)
+- Zarf CLI (for package deployment)
 - Grype CLI (for vulnerability scanning)
 - Syft CLI (for SBOM generation)
 
@@ -65,14 +63,14 @@ apps/
 git clone https://github.com/d0s-dev/apps.git
 cd apps
 
-# Install dependencies
-npm install
+# Install d0s CLI (or build from source)
+go install github.com/d0s-dev/d0s/cmd/d0s@latest
 
 # Validate all manifests
-npm run validate
+d0s catalog validate --catalog-path catalog
 
 # Generate/refresh the master catalog
-npm run refresh
+d0s catalog refresh --catalog-path catalog
 ```
 
 ### Deploying Applications
@@ -104,16 +102,22 @@ zarf package deploy catalog/nginx/zarf/zarf.yaml
 
 ```bash
 # Validate all app manifests against JSON schema
-npm run validate
+d0s catalog validate --catalog-path catalog
 
 # Refresh aggregated data and regenerate apps.json
-npm run refresh
+d0s catalog refresh --catalog-path catalog
 
-# Run both validation and refresh
-npm run build
+# Generate CVE database for the website
+d0s catalog cve-db --catalog-path catalog --output site-data/cve-db.json
 
-# Format JSON files
-npx prettier --write "catalog/**/*.json"
+# Export site data for d0s.dev website
+d0s catalog export-site --catalog-path catalog --output site-data/
+
+# Scan a specific package for vulnerabilities
+d0s package scan path/to/package.tar.zst --output scans/
+
+# Build a Zarf package from source
+d0s package build path/to/zarf.yaml --output packages/
 ```
 
 ### Adding New Applications

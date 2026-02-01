@@ -1,0 +1,128 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Catalog Apps Schema",
+  "description": "Schema for d0s catalog apps.json - the master catalog index",
+  "type": "object",
+  "required": ["version", "lastUpdated", "apps"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Schema version"
+    },
+    "lastUpdated": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp of last catalog refresh"
+    },
+    "apps": {
+      "type": "array",
+      "description": "List of apps in the catalog",
+      "items": {
+        "$ref": "#/definitions/AppSummary"
+      }
+    }
+  },
+  "definitions": {
+    "AppSummary": {
+      "type": "object",
+      "required": ["id", "name", "summary", "versionCount", "latestVersion", "imageCount", "cves"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$",
+          "description": "Unique identifier for the app"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Display name of the app"
+        },
+        "summary": {
+          "type": "string",
+          "description": "Brief description for catalog cards"
+        },
+        "labels": {
+          "type": "array",
+          "items": {"type": "string"},
+          "uniqueItems": true,
+          "description": "Tags for filtering"
+        },
+        "providers": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Available image providers (e.g., vendor, ironbank, chainguard)"
+        },
+        "versionCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of versions available"
+        },
+        "latestVersion": {
+          "type": "string",
+          "description": "Most recent version string"
+        },
+        "imageCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total unique container images across all versions"
+        },
+        "cves": {
+          "$ref": "#/definitions/CVESummary"
+        },
+        "links": {
+          "$ref": "#/definitions/AppLinks"
+        }
+      }
+    },
+    "CVESummary": {
+      "type": "object",
+      "required": ["critical", "high", "medium", "low"],
+      "properties": {
+        "critical": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Count of critical severity CVEs"
+        },
+        "high": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Count of high severity CVEs"
+        },
+        "medium": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Count of medium severity CVEs"
+        },
+        "low": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Count of low severity CVEs"
+        }
+      }
+    },
+    "AppLinks": {
+      "type": "object",
+      "properties": {
+        "helm": {
+          "type": "string",
+          "description": "Helm chart repository URL"
+        },
+        "documentation": {
+          "type": "string",
+          "format": "uri",
+          "description": "Documentation URL"
+        },
+        "git": {
+          "type": "string",
+          "format": "uri",
+          "description": "Source repository URL"
+        },
+        "website": {
+          "type": "string",
+          "format": "uri",
+          "description": "Project website URL"
+        }
+      }
+    }
+  }
+}

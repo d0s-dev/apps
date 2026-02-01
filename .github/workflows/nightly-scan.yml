@@ -1,11 +1,25 @@
 name: Nightly CVE Scans
 
 on:
+  # Can be triggered after nightly-pipeline completes
+  workflow_run:
+    workflows: ["Nightly Pipeline"]
+    types: [completed]
+    branches: [main]
+  
+  # Also runs on its own schedule (in case nightly-pipeline didn't run or for additional scans)
   schedule:
-    # Run every night at 3 AM UTC (after nightly builds)
-    - cron: '0 3 * * *'
+    # Run every night at 4 AM UTC (after nightly builds at 2 AM)
+    - cron: '0 4 * * *'
+  
+  # Manual trigger
   workflow_dispatch:
     inputs:
+      scan_all_versions:
+        description: 'Scan all versions (not just latest N)'
+        required: false
+        default: false
+        type: boolean
       send_notification:
         description: 'Send Discord notification'
         required: false
@@ -22,6 +36,12 @@ jobs:
   scan-catalog:
     name: Scan Entire Catalog
     runs-on: [self-hosted, Linux, X64]
+    # Skip if triggered by failed pipeline
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    outputs:
+      has_changes: ${{ steps.check-changes.outputs.has_changes }}
+      total_critical: ${{ steps.summary.outputs.total_critical }}
+      total_high: ${{ steps.summary.outputs.total_high }}
     
     steps:
       - name: Checkout apps repository
@@ -39,7 +59,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: d0s-dev/d0s
-          ref: alpha-release
+          ref: main
           path: d0s-repo
           token: ${{ secrets.GH_PAT }}
       
@@ -52,134 +72,212 @@ jobs:
           echo "$HOME/bin" >> $GITHUB_PATH
           $HOME/bin/d0s version
       
+      - name: Install Grype
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b $HOME/bin
+          $HOME/bin/grype version
+      
       - name: Run full catalog scan
         id: scan
         run: |
           cd catalog
           
-          # Run the scan-catalog internal command (output only JSON to file)
+          # Determine versions to scan
+          if [ "${{ github.event.inputs.scan_all_versions }}" = "true" ]; then
+            VERSIONS_FLAG=""
+          else
+            VERSIONS_FLAG="--versions 3"
+          fi
+          
+          # Run the scan-catalog internal command
           d0s internal scan-catalog \
             --catalog-path . \
             --parallel 4 \
-            --output json > scan-output.json 2> scan-errors.log
+            $VERSIONS_FLAG \
+            --output json > scan-output.json 2> scan-errors.log || true
           
-          # Extract summary
-          if [ -f scan-output.json ]; then
-            echo "scan-completed=true" >> $GITHUB_OUTPUT
+          # Check if scan completed
+          if [ -f scan-output.json ] && [ -s scan-output.json ]; then
+            echo "scan_completed=true" >> $GITHUB_OUTPUT
           else
-            echo "scan-completed=false" >> $GITHUB_OUTPUT
-          fi
-          
-          # Show any errors
-          if [ -s scan-errors.log ]; then
-            echo "Scan warnings/errors:"
-            cat scan-errors.log
+            echo "scan_completed=false" >> $GITHUB_OUTPUT
+            echo "Scan output empty or missing"
+            cat scan-errors.log 2>/dev/null || true
           fi
       
-      - name: Check for CVE changes
+      - name: Regenerate catalog data
+        run: |
+          cd catalog
+          
+          # Generate central CVE database from scan results
+          d0s catalog cve-db --catalog-path . || true
+          
+          # Refresh apps.json with updated CVE aggregates
+          d0s catalog refresh --catalog-path . || true
+          
+          echo "✅ Regenerated apps.json and cves.json"
+      
+      - name: Check for changes
         id: check-changes
         run: |
           if git diff --quiet catalog/; then
-            echo "has-changes=false" >> $GITHUB_OUTPUT
+            echo "has_changes=false" >> $GITHUB_OUTPUT
             echo "No CVE changes detected"
           else
-            echo "has-changes=true" >> $GITHUB_OUTPUT
-            echo "CVE changes detected"
-            
-            # Count changed files
-            CHANGED_FILES=$(git diff --name-only catalog/ | wc -l)
-            echo "changed-files=$CHANGED_FILES" >> $GITHUB_OUTPUT
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            CHANGED_FILES=$(git diff --name-only catalog/ | wc -l | tr -d ' ')
+            echo "changed_files=$CHANGED_FILES" >> $GITHUB_OUTPUT
+            echo "CVE changes detected in $CHANGED_FILES files"
           fi
       
-      - name: Generate scan summary
-        if: always()
+      - name: Generate summary
+        id: summary
         run: |
-          echo "## 🔍 Nightly CVE Scan Results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Scan Date:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          
-          if [ -f "catalog/scan-output.json" ]; then
-            # Parse JSON output for summary
-            TOTAL_APPS=$(jq -r '.total_apps // 0' catalog/scan-output.json 2>/dev/null || echo "0")
-            SUCCESSFUL=$(jq -r '.successful_scans // 0' catalog/scan-output.json 2>/dev/null || echo "0")
-            FAILED=$(jq -r '.failed_scans // 0' catalog/scan-output.json 2>/dev/null || echo "0")
-            SKIPPED=$(jq -r '.skipped_scans // 0' catalog/scan-output.json 2>/dev/null || echo "0")
+          if [ -f "catalog/apps.json" ]; then
+            TOTAL_CRITICAL=$(jq '[.apps[].cves.critical] | add // 0' catalog/apps.json)
+            TOTAL_HIGH=$(jq '[.apps[].cves.high] | add // 0' catalog/apps.json)
+            TOTAL_MEDIUM=$(jq '[.apps[].cves.medium] | add // 0' catalog/apps.json)
+            TOTAL_LOW=$(jq '[.apps[].cves.low] | add // 0' catalog/apps.json)
+            APP_COUNT=$(jq '.apps | length' catalog/apps.json)
             
-            echo "**Statistics:**" >> $GITHUB_STEP_SUMMARY
-            echo "- Total Apps: $TOTAL_APPS" >> $GITHUB_STEP_SUMMARY
-            echo "- ✅ Successful: $SUCCESSFUL" >> $GITHUB_STEP_SUMMARY
-            echo "- ❌ Failed: $FAILED" >> $GITHUB_STEP_SUMMARY
-            echo "- ⏭️ Skipped: $SKIPPED" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            
-            # Show CVE delta if available
-            if jq -e '.total_cve_delta' catalog/scan-output.json >/dev/null 2>&1; then
-              NEW_CRITICAL=$(jq -r '.total_cve_delta.new.critical // 0' catalog/scan-output.json)
-              NEW_HIGH=$(jq -r '.total_cve_delta.new.high // 0' catalog/scan-output.json)
-              NEW_MEDIUM=$(jq -r '.total_cve_delta.new.medium // 0' catalog/scan-output.json)
-              NEW_LOW=$(jq -r '.total_cve_delta.new.low // 0' catalog/scan-output.json)
-              
-              RESOLVED_CRITICAL=$(jq -r '.total_cve_delta.resolved.critical // 0' catalog/scan-output.json)
-              RESOLVED_HIGH=$(jq -r '.total_cve_delta.resolved.high // 0' catalog/scan-output.json)
-              RESOLVED_MEDIUM=$(jq -r '.total_cve_delta.resolved.medium // 0' catalog/scan-output.json)
-              RESOLVED_LOW=$(jq -r '.total_cve_delta.resolved.low // 0' catalog/scan-output.json)
-              
-              echo "**CVE Changes:**" >> $GITHUB_STEP_SUMMARY
-              echo "" >> $GITHUB_STEP_SUMMARY
-              echo "New CVEs: 🔴 $NEW_CRITICAL Critical | 🟡 $NEW_HIGH High | 🟠 $NEW_MEDIUM Medium | ⚪ $NEW_LOW Low" >> $GITHUB_STEP_SUMMARY
-              echo "Resolved: 🟢 $RESOLVED_CRITICAL Critical | 🟢 $RESOLVED_HIGH High | 🟢 $RESOLVED_MEDIUM Medium | 🟢 $RESOLVED_LOW Low" >> $GITHUB_STEP_SUMMARY
-            fi
-          else
-            echo "⚠️ Scan output not found" >> $GITHUB_STEP_SUMMARY
-          fi
-          
-          if [ "${{ steps.check-changes.outputs.has-changes }}" = "true" ]; then
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "**Result:** Changes detected in ${{ steps.check-changes.outputs.changed-files }} files" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "**Result:** No CVE database changes" >> $GITHUB_STEP_SUMMARY
+            echo "total_critical=$TOTAL_CRITICAL" >> $GITHUB_OUTPUT
+            echo "total_high=$TOTAL_HIGH" >> $GITHUB_OUTPUT
+            echo "total_medium=$TOTAL_MEDIUM" >> $GITHUB_OUTPUT
+            echo "total_low=$TOTAL_LOW" >> $GITHUB_OUTPUT
+            echo "app_count=$APP_COUNT" >> $GITHUB_OUTPUT
           fi
       
       - name: Commit CVE updates
-        if: steps.check-changes.outputs.has-changes == 'true'
+        if: steps.check-changes.outputs.has_changes == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
           git add catalog/
-          git commit -m "chore: nightly CVE scan updates
-          
-          - Scanned ${{ steps.check-changes.outputs.changed-files }} apps
-          - Updated CVE database with latest vulnerability data
-          - Automated scan via GitHub Actions"
+          git commit -m "chore: CVE scan updates $(date -u +%Y-%m-%d)
+
+          - Scanned catalog for latest vulnerabilities
+          - Updated scannedAt timestamps in manifests
+          - Regenerated apps.json and cves.json
+          - Total: ${{ steps.summary.outputs.total_critical }} Critical, ${{ steps.summary.outputs.total_high }} High"
           
           git push
       
-      - name: Send Discord notification
-        if: |
-          always() && 
-          (github.event_name == 'schedule' || inputs.send_notification == true) &&
-          env.DISCORD_WEBHOOK_URL != ''
+      - name: Generate workflow summary
+        if: always()
         run: |
-          cd catalog
+          echo "## 🔍 Nightly CVE Scan Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Scan Date:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "**Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
           
-          # Send notification using d0s internal notify command
-          if [ -f scan-output.json ]; then
-            d0s internal notify \
-              --webhook-url "${{ secrets.DISCORD_WEBHOOK_URL }}" \
-              --type auto \
-              --file scan-output.json \
-              --verbose || echo "Notification failed, continuing..."
+          if [ -f "catalog/apps.json" ]; then
+            echo "### CVE Summary" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "| Severity | Count |" >> $GITHUB_STEP_SUMMARY
+            echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "| 🔴 Critical | ${{ steps.summary.outputs.total_critical }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| 🟠 High | ${{ steps.summary.outputs.total_high }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| 🟡 Medium | ${{ steps.summary.outputs.total_medium }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| ⚪ Low | ${{ steps.summary.outputs.total_low }} |" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Apps Scanned:** ${{ steps.summary.outputs.app_count }}" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ steps.check-changes.outputs.has_changes }}" = "true" ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "✅ **Changes committed:** ${{ steps.check-changes.outputs.changed_files }} files updated" >> $GITHUB_STEP_SUMMARY
           else
-            echo "No scan output to send notification"
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "ℹ️ **No changes:** CVE database is up to date" >> $GITHUB_STEP_SUMMARY
           fi
       
       - name: Upload scan results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: scan-results
-          path: catalog/scan-output.json
-          retention-days: 7
+          name: scan-results-${{ github.run_id }}
+          path: |
+            catalog/scan-output.json
+            catalog/apps.json
+            catalog/cves.json
+          retention-days: 30
+
+  # ============================================================================
+  # Notify: Send Discord notification
+  # ============================================================================
+  notify:
+    name: Discord Notification
+    needs: scan-catalog
+    if: |
+      always() && 
+      (github.event_name == 'schedule' || 
+       github.event_name == 'workflow_run' || 
+       github.event.inputs.send_notification == 'true')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Send Discord notification
+        env:
+          WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          if [ -z "$WEBHOOK_URL" ]; then
+            echo "No Discord webhook configured, skipping notification"
+            exit 0
+          fi
+          
+          SCAN_STATUS="${{ needs.scan-catalog.result }}"
+          HAS_CHANGES="${{ needs.scan-catalog.outputs.has_changes }}"
+          TOTAL_CRITICAL="${{ needs.scan-catalog.outputs.total_critical }}"
+          TOTAL_HIGH="${{ needs.scan-catalog.outputs.total_high }}"
+          
+          # Determine status and color
+          if [ "$SCAN_STATUS" = "success" ]; then
+            if [ "$TOTAL_CRITICAL" -gt 0 ]; then
+              STATUS="⚠️ Scan Complete - Critical CVEs Found"
+              COLOR=15158332
+            else
+              STATUS="✅ Scan Complete"
+              COLOR=3066993
+            fi
+          else
+            STATUS="❌ Scan Failed"
+            COLOR=15158332
+          fi
+          
+          curl -H "Content-Type: application/json" -X POST "$WEBHOOK_URL" -d @- <<EOF
+          {
+            "embeds": [{
+              "title": "🔍 Nightly CVE Scan",
+              "description": "$STATUS",
+              "color": $COLOR,
+              "fields": [
+                {"name": "🔴 Critical", "value": "${TOTAL_CRITICAL:-0}", "inline": true},
+                {"name": "🟠 High", "value": "${TOTAL_HIGH:-0}", "inline": true},
+                {"name": "Changes", "value": "${HAS_CHANGES:-false}", "inline": true},
+                {"name": "Run", "value": "[View Details](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})", "inline": false}
+              ],
+              "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+              "footer": {"text": "d0s.dev CVE Scanner"}
+            }]
+          }
+          EOF
+
+  # ============================================================================
+  # Trigger Site: Dispatch event to rebuild site
+  # ============================================================================
+  trigger-site:
+    name: Trigger Site Rebuild
+    needs: scan-catalog
+    if: needs.scan-catalog.outputs.has_changes == 'true'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Trigger site rebuild
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.GH_PAT }}
+          repository: d0s-dev/site
+          event-type: catalog-updated
+          client-payload: '{"triggered_by": "nightly-scan", "run_id": "${{ github.run_id }}"}'

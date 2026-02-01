@@ -1,0 +1,447 @@
+name: Nightly Pipeline
+
+on:
+  schedule:
+    # Run every night at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      apps:
+        description: 'Apps to process (comma-separated, or "all")'
+        required: false
+        default: 'all'
+      skip_build:
+        description: 'Skip building packages (scan only)'
+        required: false
+        default: false
+        type: boolean
+      versions_to_build:
+        description: 'Number of versions to build per app'
+        required: false
+        default: '3'
+
+permissions:
+  contents: write
+  packages: write
+
+env:
+  DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+  GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  VERSIONS_TO_BUILD: ${{ github.event.inputs.versions_to_build || '3' }}
+
+jobs:
+  # ============================================================================
+  # Discovery: Find all apps in the catalog
+  # ============================================================================
+  discover:
+    name: Discover Apps
+    runs-on: ubuntu-latest
+    outputs:
+      apps: ${{ steps.find-apps.outputs.apps }}
+      app_count: ${{ steps.find-apps.outputs.app_count }}
+    
+    steps:
+      - name: Checkout apps repository
+        uses: actions/checkout@v4
+      
+      - name: Find all apps
+        id: find-apps
+        run: |
+          # Find all apps with manifest.json
+          APPS=$(find catalog -maxdepth 2 -name "manifest.json" -exec dirname {} \; | xargs -I {} basename {} | sort | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          
+          # Filter if specific apps requested
+          if [ "${{ github.event.inputs.apps }}" != "" ] && [ "${{ github.event.inputs.apps }}" != "all" ]; then
+            REQUESTED=$(echo "${{ github.event.inputs.apps }}" | tr ',' '\n' | jq -R -s -c 'split("\n") | map(select(length > 0))')
+            APPS=$(echo "$APPS" | jq --argjson req "$REQUESTED" '[.[] | select(. as $app | $req | index($app))]')
+          fi
+          
+          APP_COUNT=$(echo "$APPS" | jq '. | length')
+          
+          echo "apps=$APPS" >> $GITHUB_OUTPUT
+          echo "app_count=$APP_COUNT" >> $GITHUB_OUTPUT
+          echo "Found $APP_COUNT apps: $APPS"
+
+  # ============================================================================
+  # Update: Check for new upstream versions
+  # ============================================================================
+  update:
+    name: Update Catalog
+    needs: discover
+    runs-on: [self-hosted, Linux, X64]
+    outputs:
+      has_updates: ${{ steps.update.outputs.has_updates }}
+      updated_apps: ${{ steps.update.outputs.updated_apps }}
+    
+    steps:
+      - name: Checkout apps repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+      
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+      
+      - name: Checkout d0s CLI repository
+        uses: actions/checkout@v4
+        with:
+          repository: d0s-dev/d0s
+          ref: main
+          path: d0s-repo
+          token: ${{ secrets.GH_PAT }}
+      
+      - name: Build and install d0s CLI
+        run: |
+          cd d0s-repo
+          go build -o d0s ./cmd/d0s
+          mkdir -p $HOME/bin
+          mv d0s $HOME/bin/d0s
+          echo "$HOME/bin" >> $GITHUB_PATH
+          $HOME/bin/d0s version
+      
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: 'latest'
+      
+      - name: Update all apps
+        id: update
+        run: |
+          cd catalog
+          
+          # Run update for all apps
+          d0s catalog update --all --versions ${{ env.VERSIONS_TO_BUILD }} 2>&1 | tee update-output.txt
+          
+          # Check if any updates were made
+          if git diff --quiet .; then
+            echo "has_updates=false" >> $GITHUB_OUTPUT
+            echo "updated_apps=[]" >> $GITHUB_OUTPUT
+            echo "No new versions found"
+          else
+            echo "has_updates=true" >> $GITHUB_OUTPUT
+            # List apps with changes
+            UPDATED=$(git diff --name-only . | grep manifest.json | xargs -I {} dirname {} | xargs -I {} basename {} | sort -u | jq -R -s -c 'split("\n") | map(select(length > 0))')
+            echo "updated_apps=$UPDATED" >> $GITHUB_OUTPUT
+            echo "Updated apps: $UPDATED"
+          fi
+      
+      - name: Commit version updates
+        if: steps.update.outputs.has_updates == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add catalog/
+          git commit -m "chore: update catalog with new upstream versions [skip ci]
+
+          - Updated manifest.json with new chart versions
+          - Created version directories for new versions
+          - Triggered by nightly pipeline"
+          git push
+
+  # ============================================================================
+  # Build: Build packages for each app (matrix strategy)
+  # ============================================================================
+  build:
+    name: Build ${{ matrix.app }}
+    needs: [discover, update]
+    if: github.event.inputs.skip_build != 'true'
+    runs-on: [self-hosted, Linux, X64]
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        app: ${{ fromJson(needs.discover.outputs.apps) }}
+    outputs:
+      results: ${{ steps.aggregate.outputs.results }}
+    
+    steps:
+      - name: Checkout apps repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+      
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+      
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: 'latest'
+      
+      - name: Checkout d0s CLI repository
+        uses: actions/checkout@v4
+        with:
+          repository: d0s-dev/d0s
+          ref: main
+          path: d0s-repo
+          token: ${{ secrets.GH_PAT }}
+      
+      - name: Build and install d0s CLI
+        run: |
+          cd d0s-repo
+          go build -o d0s ./cmd/d0s
+          mkdir -p $HOME/bin
+          mv d0s $HOME/bin/d0s
+          echo "$HOME/bin" >> $GITHUB_PATH
+      
+      - name: Install Grype
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b $HOME/bin
+          $HOME/bin/grype version
+      
+      - name: Generate zarf.yaml for versions
+        run: |
+          cd catalog
+          d0s package generate ${{ matrix.app }} --all || true
+      
+      - name: Build packages (N versions)
+        id: build
+        run: |
+          cd catalog
+          
+          # Build latest N versions
+          d0s catalog build-all \
+            --app ${{ matrix.app }} \
+            --versions-to-build ${{ env.VERSIONS_TO_BUILD }} \
+            --arch amd64 \
+            --concurrency 1 \
+            2>&1 | tee build-output.txt
+          
+          # Check exit code
+          if [ $? -eq 0 ]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+          else
+            echo "status=failed" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Aggregate results
+        id: aggregate
+        if: always()
+        run: |
+          # Extract build stats from manifest
+          if [ -f "catalog/${{ matrix.app }}/manifest.json" ]; then
+            VERSIONS=$(jq -r '.versions | length' catalog/${{ matrix.app }}/manifest.json)
+            LATEST=$(jq -r '.versions[0].version // "unknown"' catalog/${{ matrix.app }}/manifest.json)
+            BUILT_AT=$(jq -r '.versions[0].builtAt // "unknown"' catalog/${{ matrix.app }}/manifest.json)
+            CRITICAL=$(jq -r '.versions[0].aggregates.critical // 0' catalog/${{ matrix.app }}/manifest.json)
+            HIGH=$(jq -r '.versions[0].aggregates.high // 0' catalog/${{ matrix.app }}/manifest.json)
+            
+            RESULT='{"app":"${{ matrix.app }}","status":"${{ steps.build.outputs.status }}","versions":'$VERSIONS',"latest":"'$LATEST'","builtAt":"'$BUILT_AT'","critical":'$CRITICAL',"high":'$HIGH'}'
+            echo "results=$RESULT" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Upload build artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.app }}-build
+          path: |
+            catalog/${{ matrix.app }}/manifest.json
+            catalog/${{ matrix.app }}/versions/*/scans/
+            catalog/${{ matrix.app }}/versions/*/sboms/
+          retention-days: 7
+      
+      - name: Generate job summary
+        if: always()
+        run: |
+          echo "## 📦 Build: ${{ matrix.app }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** ${{ steps.build.outputs.status || 'unknown' }}" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f "catalog/${{ matrix.app }}/manifest.json" ]; then
+            LATEST=$(jq -r '.versions[0].version // "N/A"' catalog/${{ matrix.app }}/manifest.json)
+            CRITICAL=$(jq -r '.versions[0].aggregates.critical // 0' catalog/${{ matrix.app }}/manifest.json)
+            HIGH=$(jq -r '.versions[0].aggregates.high // 0' catalog/${{ matrix.app }}/manifest.json)
+            MEDIUM=$(jq -r '.versions[0].aggregates.medium // 0' catalog/${{ matrix.app }}/manifest.json)
+            LOW=$(jq -r '.versions[0].aggregates.low // 0' catalog/${{ matrix.app }}/manifest.json)
+            BUILT_AT=$(jq -r '.versions[0].builtAt // "N/A"' catalog/${{ matrix.app }}/manifest.json)
+            
+            echo "**Latest Version:** $LATEST" >> $GITHUB_STEP_SUMMARY
+            echo "**Built At:** $BUILT_AT" >> $GITHUB_STEP_SUMMARY
+            echo "**CVEs:** 🔴 $CRITICAL | 🟠 $HIGH | 🟡 $MEDIUM | ⚪ $LOW" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # ============================================================================
+  # Commit: Aggregate all changes and commit
+  # ============================================================================
+  commit:
+    name: Commit Changes
+    needs: [discover, build]
+    if: always() && needs.discover.result == 'success'
+    runs-on: [self-hosted, Linux, X64]
+    outputs:
+      committed: ${{ steps.commit.outputs.committed }}
+    
+    steps:
+      - name: Checkout apps repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+      
+      - name: Apply changes
+        id: apply
+        run: |
+          HAS_CHANGES=false
+          
+          # Apply each app's changes
+          for artifact_dir in artifacts/*-build; do
+            if [ -d "$artifact_dir" ]; then
+              app=$(basename "$artifact_dir" | sed 's/-build$//')
+              echo "Applying changes for $app"
+              
+              # Copy manifest
+              if [ -f "$artifact_dir/manifest.json" ]; then
+                cp "$artifact_dir/manifest.json" "catalog/$app/"
+                HAS_CHANGES=true
+              fi
+              
+              # Copy version artifacts
+              if [ -d "$artifact_dir/versions" ]; then
+                cp -r "$artifact_dir/versions/"* "catalog/$app/versions/" 2>/dev/null || true
+                HAS_CHANGES=true
+              fi
+            fi
+          done
+          
+          echo "has_changes=$HAS_CHANGES" >> $GITHUB_OUTPUT
+      
+      - name: Setup Go
+        if: steps.apply.outputs.has_changes == 'true'
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+      
+      - name: Checkout d0s CLI repository
+        if: steps.apply.outputs.has_changes == 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: d0s-dev/d0s
+          ref: main
+          path: d0s-repo
+          token: ${{ secrets.GH_PAT }}
+      
+      - name: Regenerate catalog
+        if: steps.apply.outputs.has_changes == 'true'
+        run: |
+          cd d0s-repo
+          go build -o d0s ./cmd/d0s
+          ./d0s catalog refresh --catalog-path ../catalog
+          ./d0s catalog cve-db --catalog-path ../catalog
+      
+      - name: Commit and push
+        id: commit
+        if: steps.apply.outputs.has_changes == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add catalog/
+          
+          if git diff --cached --quiet; then
+            echo "committed=false" >> $GITHUB_OUTPUT
+            echo "No changes to commit"
+          else
+            git commit -m "chore: nightly build updates $(date -u +%Y-%m-%d)
+
+            - Built packages for latest ${{ env.VERSIONS_TO_BUILD }} versions per app
+            - Updated CVE scan results and SBOMs
+            - Regenerated apps.json and cves.json"
+            git push
+            echo "committed=true" >> $GITHUB_OUTPUT
+          fi
+
+  # ============================================================================
+  # Notify: Send Discord notification
+  # ============================================================================
+  notify:
+    name: Discord Notification
+    needs: [discover, update, build, commit]
+    if: always()
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout apps repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      
+      - name: Generate notification
+        env:
+          WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          # Build job status
+          BUILD_STATUS="${{ needs.build.result }}"
+          COMMIT_STATUS="${{ needs.commit.result }}"
+          UPDATE_STATUS="${{ needs.update.result }}"
+          APP_COUNT="${{ needs.discover.outputs.app_count }}"
+          
+          # Determine overall status and color
+          if [ "$BUILD_STATUS" = "success" ] && [ "$COMMIT_STATUS" = "success" ]; then
+            STATUS="✅ Success"
+            COLOR=3066993
+          elif [ "$BUILD_STATUS" = "failure" ]; then
+            STATUS="❌ Build Failed"
+            COLOR=15158332
+          else
+            STATUS="⚠️ Partial Success"
+            COLOR=16776960
+          fi
+          
+          # Count CVE totals from apps.json if it exists
+          TOTAL_CRITICAL=0
+          TOTAL_HIGH=0
+          if [ -f "catalog/apps.json" ]; then
+            TOTAL_CRITICAL=$(jq '[.apps[].cves.critical] | add // 0' catalog/apps.json)
+            TOTAL_HIGH=$(jq '[.apps[].cves.high] | add // 0' catalog/apps.json)
+          fi
+          
+          # Send Discord webhook
+          curl -H "Content-Type: application/json" -X POST "$WEBHOOK_URL" -d @- <<EOF
+          {
+            "embeds": [{
+              "title": "🌙 Nightly Pipeline Complete",
+              "description": "$STATUS",
+              "color": $COLOR,
+              "fields": [
+                {"name": "Apps Processed", "value": "$APP_COUNT", "inline": true},
+                {"name": "Versions Built", "value": "${{ env.VERSIONS_TO_BUILD }}/app", "inline": true},
+                {"name": "Run", "value": "[View Workflow](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})", "inline": true},
+                {"name": "CVE Summary", "value": "🔴 $TOTAL_CRITICAL Critical | 🟠 $TOTAL_HIGH High", "inline": false}
+              ],
+              "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+              "footer": {"text": "d0s.dev Nightly Pipeline"}
+            }]
+          }
+          EOF
+
+  # ============================================================================
+  # Trigger Site: Dispatch event to rebuild site
+  # ============================================================================
+  trigger-site:
+    name: Trigger Site Rebuild
+    needs: [commit]
+    if: needs.commit.outputs.committed == 'true'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Trigger site rebuild
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.GH_PAT }}
+          repository: d0s-dev/site
+          event-type: catalog-updated
+          client-payload: '{"triggered_by": "nightly-pipeline", "run_id": "${{ github.run_id }}"}'

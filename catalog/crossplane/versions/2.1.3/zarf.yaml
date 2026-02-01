@@ -1,0 +1,20 @@
+kind: ZarfPackageConfig
+metadata:
+  name: crossplane
+  description: "crossplane Helm chart from https://charts.crossplane.io/stable/"
+  version: "2.1.3"
+  url: "https://github.com/d0s-dev/apps"
+
+components:
+  - name: crossplane
+    required: true
+    description: "Deploy Crossplane"
+    charts:
+      - name: crossplane
+        version: "2.1.3"
+        namespace: crossplane
+        url: https://charts.crossplane.io/stable/
+        valuesFiles:
+          - ../../values.yaml
+    images:
+      - "xpkg.crossplane.io/crossplane/crossplane:v2.1.3"

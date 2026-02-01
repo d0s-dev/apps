@@ -29,20 +29,33 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Go
+        uses: actions/setup-go@v5
         with:
-          node-version: '18'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
+          go-version: '1.23'
+      
+      - name: Checkout d0s CLI repository
+        uses: actions/checkout@v4
+        with:
+          repository: d0s-dev/d0s
+          ref: main
+          path: d0s-repo
+          token: ${{ secrets.GH_PAT }}
+      
+      - name: Build and install d0s CLI
+        run: |
+          cd d0s-repo
+          go build -o d0s ./cmd/d0s
+          sudo mv d0s /usr/local/bin/d0s
+          d0s version
 
       - name: Validate manifests
-        run: npm run validate
+        run: |
+          d0s catalog validate --catalog-path catalog
 
       - name: Refresh catalog data
-        run: npm run refresh
+        run: |
+          d0s catalog refresh --catalog-path catalog
 
       - name: Check for changes
         id: git-check
@@ -110,20 +123,33 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Go
+        uses: actions/setup-go@v5
         with:
-          node-version: '18'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
+          go-version: '1.25'
+      
+      - name: Checkout d0s CLI repository
+        uses: actions/checkout@v4
+        with:
+          repository: d0s-dev/d0s
+          ref: alpha-release
+          path: d0s-repo
+          token: ${{ secrets.GH_PAT }}
+      
+      - name: Build and install d0s CLI
+        run: |
+          cd d0s-repo
+          go build -o d0s ./cmd/d0s
+          sudo mv d0s /usr/local/bin/d0s
+          d0s version
 
       - name: Validate manifests
-        run: npm run validate
+        run: |
+          d0s catalog validate --catalog-path catalog
 
       - name: Test catalog generation
-        run: npm run refresh
+        run: |
+          d0s catalog refresh --catalog-path catalog
 
       - name: Check catalog integrity
         run: |

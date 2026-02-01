@@ -1,202 +1,40 @@
 {
-  "category": "Uncategorized",
-  "description": "Redis(R) is an open source, advanced key-value store. It is often referred to as a data structure server since keys can contain strings, hashes, lists, sets and sorted sets.",
-  "homepage": "https://bitnami.com",
   "id": "redis",
-  "name": "redis",
-  "providers": {
-    "vendor": {
-      "support": "community",
-      "versions": [
+  "name": "Redis",
+  "description": "Redis is an open source, advanced key-value store for high-performance caching and data structures",
+  "upstream": {
+    "helm": {
+      "repo": "https://charts.bitnami.com/bitnami",
+      "chart": "redis"
+    }
+  },
+  "versions": [
+    {
+      "version": "24.1.2",
+      "chartVersion": "24.1.2",
+      "images": [
         {
-          "aggregates": {
-            "critical": 0,
-            "high": 0,
-            "medium": 0,
-            "low": 0
-          },
-          "images": [
-            {
-              "cves": {},
-              "digest": "",
-              "name": "bitnami/redis-sentinel:latest",
-              "platforms": [
-                "linux/amd64",
-                "linux/arm64"
-              ],
-              "sbom": {}
-            },
-            {
-              "cves": {},
-              "digest": "",
-              "name": "bitnami/redis-exporter:latest",
-              "platforms": [
-                "linux/amd64",
-                "linux/arm64"
-              ],
-              "sbom": {}
-            },
-            {
-              "cves": {},
-              "digest": "",
-              "name": "bitnami/redis:latest",
-              "platforms": [
-                "linux/amd64",
-                "linux/arm64"
-              ],
-              "sbom": {}
-            },
-            {
-              "cves": {},
-              "digest": "",
-              "name": "bitnami/os-shell:latest",
-              "platforms": [
-                "linux/arm64",
-                "linux/amd64"
-              ],
-              "sbom": {}
-            },
-            {
-              "cves": {},
-              "digest": "",
-              "name": "bitnami/kubectl:latest",
-              "platforms": [
-                "linux/arm64",
-                "linux/amd64"
-              ],
-              "sbom": {}
-            }
-          ],
-          "released": "2025-11-09T10:57:19-05:00",
-          "version": "23.2.11",
-          "zarfPackage": {
-            "built": "2025-11-09T10:57:19-05:00",
-            "registry": "oci://ghcr.io/d0s-dev/apps/redis:23.2.11",
-            "tag": "23.2.11"
-          }
-        },
+          "name": "registry-1.docker.io/bitnami/redis:latest"
+        }
+      ]
+    },
+    {
+      "version": "24.1.0",
+      "chartVersion": "24.1.0",
+      "images": [
         {
-          "aggregates": {
-            "critical": 0,
-            "high": 0,
-            "low": 0,
-            "medium": 0
-          },
-          "images": [],
-          "released": "2025-11-09T10:53:05-05:00",
-          "version": "23.2.12",
-          "zarfPackage": {
-            "built": "2025-11-09T10:53:05-05:00",
-            "registry": "oci://ghcr.io/d0s-dev/apps/redis:23.2.12",
-            "tag": "23.2.12"
-          }
-        },
+          "name": "registry-1.docker.io/bitnami/redis:latest"
+        }
+      ]
+    },
+    {
+      "version": "24.0.9",
+      "chartVersion": "24.0.9",
+      "images": [
         {
-          "aggregates": {
-            "critical": 0,
-            "high": 0,
-            "medium": 0,
-            "low": 0
-          },
-          "images": [
-            {
-              "cves": {
-                "amd64": "./redis/scans/vendor/23.2.10/bitnami-redis-latest-amd64.grype.json",
-                "arm64": "./redis/scans/vendor/23.2.10/bitnami-redis-latest-arm64.grype.json"
-              },
-              "digest": "",
-              "name": "bitnami/redis:latest",
-              "platforms": [
-                "linux/amd64",
-                "linux/arm64"
-              ],
-              "sbom": {
-                "amd64": "./redis/sboms/vendor/23.2.10/bitnami-redis-latest-amd64.syft.json",
-                "arm64": "./redis/sboms/vendor/23.2.10/bitnami-redis-latest-arm64.syft.json"
-              }
-            },
-            {
-              "cves": {
-                "amd64": "./redis/scans/vendor/23.2.10/bitnami-redis-sentinel-latest-amd64.grype.json",
-                "arm64": "./redis/scans/vendor/23.2.10/bitnami-redis-sentinel-latest-arm64.grype.json"
-              },
-              "digest": "",
-              "name": "bitnami/redis-sentinel:latest",
-              "platforms": [
-                "linux/arm64",
-                "linux/amd64"
-              ],
-              "sbom": {
-                "amd64": "./redis/sboms/vendor/23.2.10/bitnami-redis-sentinel-latest-amd64.syft.json",
-                "arm64": "./redis/sboms/vendor/23.2.10/bitnami-redis-sentinel-latest-arm64.syft.json"
-              }
-            },
-            {
-              "cves": {
-                "amd64": "./redis/scans/vendor/23.2.10/bitnami-os-shell-latest-amd64.grype.json",
-                "arm64": "./redis/scans/vendor/23.2.10/bitnami-os-shell-latest-arm64.grype.json"
-              },
-              "digest": "",
-              "name": "bitnami/os-shell:latest",
-              "platforms": [
-                "linux/arm64",
-                "linux/amd64"
-              ],
-              "sbom": {
-                "amd64": "./redis/sboms/vendor/23.2.10/bitnami-os-shell-latest-amd64.syft.json",
-                "arm64": "./redis/sboms/vendor/23.2.10/bitnami-os-shell-latest-arm64.syft.json"
-              }
-            },
-            {
-              "cves": {
-                "amd64": "./redis/scans/vendor/23.2.10/bitnami-redis-exporter-latest-amd64.grype.json",
-                "arm64": "./redis/scans/vendor/23.2.10/bitnami-redis-exporter-latest-arm64.grype.json"
-              },
-              "digest": "",
-              "name": "bitnami/redis-exporter:latest",
-              "platforms": [
-                "linux/amd64",
-                "linux/arm64"
-              ],
-              "sbom": {
-                "amd64": "./redis/sboms/vendor/23.2.10/bitnami-redis-exporter-latest-amd64.syft.json",
-                "arm64": "./redis/sboms/vendor/23.2.10/bitnami-redis-exporter-latest-arm64.syft.json"
-              }
-            },
-            {
-              "cves": {
-                "amd64": "./redis/scans/vendor/23.2.10/bitnami-kubectl-latest-amd64.grype.json",
-                "arm64": "./redis/scans/vendor/23.2.10/bitnami-kubectl-latest-arm64.grype.json"
-              },
-              "digest": "",
-              "name": "bitnami/kubectl:latest",
-              "platforms": [
-                "linux/arm64",
-                "linux/amd64"
-              ],
-              "sbom": {
-                "amd64": "./redis/sboms/vendor/23.2.10/bitnami-kubectl-latest-amd64.syft.json",
-                "arm64": "./redis/sboms/vendor/23.2.10/bitnami-kubectl-latest-arm64.syft.json"
-              }
-            }
-          ],
-          "released": "2025-11-07T00:26:47-05:00",
-          "version": "23.2.10",
-          "zarfPackage": {
-            "built": "2025-11-09T00:51:11-05:00",
-            "registry": "oci://ghcr.io/d0s-dev/apps/redis:23.2.10",
-            "tag": "23.2.10"
-          }
+          "name": "registry-1.docker.io/bitnami/redis:latest"
         }
       ]
     }
-  },
-  "upstream": {
-    "helm": {
-      "autoUpdate": true,
-      "name": "redis",
-      "repo": "https://charts.bitnami.com/bitnami"
-    }
-  },
-  "lastScanned": "2025-11-10T05:33:29.826Z"
+  ]
 }

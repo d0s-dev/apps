@@ -1,0 +1,20 @@
+kind: ZarfPackageConfig
+metadata:
+  name: redis
+  description: "Redis is an open source, advanced key-value store for high-performance caching and data structures"
+  version: "24.1.2"
+  url: "https://github.com/d0s-dev/apps"
+
+components:
+  - name: redis
+    required: true
+    description: "Deploy Redis"
+    charts:
+      - name: redis
+        version: "24.1.2"
+        namespace: redis
+        url: https://charts.bitnami.com/bitnami
+        valuesFiles:
+          - ../../values.yaml
+    images:
+      - "registry-1.docker.io/bitnami/redis:latest"
