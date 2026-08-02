@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "lastUpdated": "2026-08-02T05:19:05Z",
+  "lastUpdated": "2026-08-02T06:27:10Z",
   "cves": {
     "CVE-2025-47906": {
       "id": "CVE-2025-47906",
@@ -42,8 +42,8 @@
           "package": "stdlib"
         }
       ],
-      "firstSeen": "2026-08-02T05:19:05Z",
-      "lastSeen": "2026-08-02T05:19:05Z"
+      "firstSeen": "2026-08-02T06:27:10Z",
+      "lastSeen": "2026-08-02T06:27:10Z"
     },
     "CVE-2025-47907": {
       "id": "CVE-2025-47907",
@@ -85,8 +85,8 @@
           "package": "stdlib"
         }
       ],
-      "firstSeen": "2026-08-02T05:19:05Z",
-      "lastSeen": "2026-08-02T05:19:05Z"
+      "firstSeen": "2026-08-02T06:27:10Z",
+      "lastSeen": "2026-08-02T06:27:10Z"
     },
     "CVE-2025-47912": {
       "id": "CVE-2025-47912",
@@ -128,8 +128,8 @@
           "package": "stdlib"
         }
       ],
-      "firstSeen": "2026-08-02T05:19:05Z",
-      "lastSeen": "2026-08-02T05:19:05Z"
+      "firstSeen": "2026-08-02T06:27:10Z",
+      "lastSeen": "2026-08-02T06:27:10Z"
     },
     "CVE-2025-58183": {
       "id": "CVE-2025-58183",
@@ -171,8 +171,8 @@
           "package": "stdlib"
         }
       ],
-      "firstSeen": "2026-08-02T05:19:05Z",
-      "lastSeen": "2026-08-02T05:19:05Z"
+      "firstSeen": "2026-08-02T06:27:10Z",
+      "lastSeen": "2026-08-02T06:27:10Z"
     },
     "CVE-2025-58185": {
       "id": "CVE-2025-58185",
@@ -214,8 +214,8 @@
           "package": "stdlib"
         }
       ],
-      "firstSeen": "2026-08-02T05:19:05Z",
-      "lastSeen": "2026-08-02T05:19:05Z"
+      "firstSeen": "2026-08-02T06:27:10Z",
+      "lastSeen": "2026-08-02T06:27:10Z"
     },
     "CVE-2025-58186": {
       "id": "CVE-2025-58186",
@@ -257,8 +257,8 @@
           "package": "stdlib"
         }
       ],
-      "firstSeen": "2026-08-02T05:19:05Z",
-      "lastSeen": "2026-08-02T05:19:05Z"
+      "firstSeen": "2026-08-02T06:27:10Z",
+      "lastSeen": "2026-08-02T06:27:10Z"
     },
     "CVE-2025-58187": {
       "id": "CVE-2025-58187",
@@ -300,8 +300,8 @@
           "package": "stdlib"
         }
       ],
-      "firstSeen": "2026-08-02T05:19:05Z",
-      "lastSeen": "2026-08-02T05:19:05Z"
+      "firstSeen": "2026-08-02T06:27:10Z",
+      "lastSeen": "2026-08-02T06:27:10Z"
     },
     "CVE-2025-58188": {
       "id": "CVE-2025-58188",
@@ -343,8 +343,8 @@
           "package": "stdlib"
         }
       ],
-      "firstSeen": "2026-08-02T05:19:05Z",
-      "lastSeen": "2026-08-02T05:19:05Z"
+      "firstSeen": "2026-08-02T06:27:10Z",
+      "lastSeen": "2026-08-02T06:27:10Z"
     },
     "CVE-2025-58189": {
       "id": "CVE-2025-58189",
@@ -386,8 +386,8 @@
           "package": "stdlib"
         }
       ],
-      "firstSeen": "2026-08-02T05:19:05Z",
-      "lastSeen": "2026-08-02T05:19:05Z"
+      "firstSeen": "2026-08-02T06:27:10Z",
+      "lastSeen": "2026-08-02T06:27:10Z"
     },
     "CVE-2025-61723": {
       "id": "CVE-2025-61723",
@@ -429,8 +429,8 @@
           "package": "stdlib"
         }
       ],
-      "firstSeen": "2026-08-02T05:19:05Z",
-      "lastSeen": "2026-08-02T05:19:05Z"
+      "firstSeen": "2026-08-02T06:27:10Z",
+      "lastSeen": "2026-08-02T06:27:10Z"
     },
     "CVE-2025-61724": {
       "id": "CVE-2025-61724",
@@ -472,8 +472,8 @@
           "package": "stdlib"
         }
       ],
-      "firstSeen": "2026-08-02T05:19:05Z",
-      "lastSeen": "2026-08-02T05:19:05Z"
+      "firstSeen": "2026-08-02T06:27:10Z",
+      "lastSeen": "2026-08-02T06:27:10Z"
     },
     "CVE-2025-61725": {
       "id": "CVE-2025-61725",
@@ -515,8 +515,8 @@
           "package": "stdlib"
         }
       ],
-      "firstSeen": "2026-08-02T05:19:05Z",
-      "lastSeen": "2026-08-02T05:19:05Z"
+      "firstSeen": "2026-08-02T06:27:10Z",
+      "lastSeen": "2026-08-02T06:27:10Z"
     },
     "CVE-2025-61727": {
       "id": "CVE-2025-61727",
@@ -557,8 +557,8 @@
           "package": "stdlib"
         }
       ],
-      "firstSeen": "2026-08-02T05:19:05Z",
-      "lastSeen": "2026-08-02T05:19:05Z"
+      "firstSeen": "2026-08-02T06:27:10Z",
+      "lastSeen": "2026-08-02T06:27:10Z"
     },
     "CVE-2025-61729": {
       "id": "CVE-2025-61729",
@@ -599,8 +599,8 @@
           "package": "stdlib"
         }
       ],
-      "firstSeen": "2026-08-02T05:19:05Z",
-      "lastSeen": "2026-08-02T05:19:05Z"
+      "firstSeen": "2026-08-02T06:27:10Z",
+      "lastSeen": "2026-08-02T06:27:10Z"
     },
     "GHSA-273p-m2cw-6833": {
       "id": "GHSA-273p-m2cw-6833",
@@ -635,8 +635,8 @@
           "package": "github.com/sigstore/rekor"
         }
       ],
-      "firstSeen": "2026-08-02T05:19:05Z",
-      "lastSeen": "2026-08-02T05:19:05Z"
+      "firstSeen": "2026-08-02T06:27:10Z",
+      "lastSeen": "2026-08-02T06:27:10Z"
     },
     "GHSA-4c4x-jm2x-pf9j": {
       "id": "GHSA-4c4x-jm2x-pf9j",
@@ -671,8 +671,8 @@
           "package": "github.com/sigstore/rekor"
         }
       ],
-      "firstSeen": "2026-08-02T05:19:05Z",
-      "lastSeen": "2026-08-02T05:19:05Z"
+      "firstSeen": "2026-08-02T06:27:10Z",
+      "lastSeen": "2026-08-02T06:27:10Z"
     },
     "GHSA-4qg8-fj49-pxjh": {
       "id": "GHSA-4qg8-fj49-pxjh",
@@ -707,8 +707,8 @@
           "package": "github.com/sigstore/timestamp-authority"
         }
       ],
-      "firstSeen": "2026-08-02T05:19:05Z",
-      "lastSeen": "2026-08-02T05:19:05Z"
+      "firstSeen": "2026-08-02T06:27:10Z",
+      "lastSeen": "2026-08-02T06:27:10Z"
     },
     "GHSA-f6x5-jh6r-wrfv": {
       "id": "GHSA-f6x5-jh6r-wrfv",
@@ -727,8 +727,8 @@
           "package": "golang.org/x/crypto"
         }
       ],
-      "firstSeen": "2026-08-02T05:19:05Z",
-      "lastSeen": "2026-08-02T05:19:05Z"
+      "firstSeen": "2026-08-02T06:27:10Z",
+      "lastSeen": "2026-08-02T06:27:10Z"
     },
     "GHSA-fcv2-xgw5-pqxf": {
       "id": "GHSA-fcv2-xgw5-pqxf",
@@ -763,8 +763,8 @@
           "package": "github.com/sigstore/sigstore"
         }
       ],
-      "firstSeen": "2026-08-02T05:19:05Z",
-      "lastSeen": "2026-08-02T05:19:05Z"
+      "firstSeen": "2026-08-02T06:27:10Z",
+      "lastSeen": "2026-08-02T06:27:10Z"
     },
     "GHSA-j5w8-q4qc-rx2x": {
       "id": "GHSA-j5w8-q4qc-rx2x",
@@ -783,8 +783,8 @@
           "package": "golang.org/x/crypto"
         }
       ],
-      "firstSeen": "2026-08-02T05:19:05Z",
-      "lastSeen": "2026-08-02T05:19:05Z"
+      "firstSeen": "2026-08-02T06:27:10Z",
+      "lastSeen": "2026-08-02T06:27:10Z"
     },
     "GHSA-whqx-f9j3-ch6m": {
       "id": "GHSA-whqx-f9j3-ch6m",
@@ -819,8 +819,8 @@
           "package": "github.com/sigstore/cosign/v2"
         }
       ],
-      "firstSeen": "2026-08-02T05:19:05Z",
-      "lastSeen": "2026-08-02T05:19:05Z"
+      "firstSeen": "2026-08-02T06:27:10Z",
+      "lastSeen": "2026-08-02T06:27:10Z"
     }
   },
   "stats": {
